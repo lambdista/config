@@ -1,0 +1,21 @@
+target/
+.cache
+project/project
+project/target
+*.log
+data/
+tmp/
+logs/
+*.sh
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+.idea_modules
+*.iml
+*.iws
+

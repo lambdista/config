@@ -43,22 +43,22 @@ object ConfigLoader {
   }
 
   implicit val fileLoader = new ConfigLoader[File] {
-    override def load(resource: File): Try[Config] = ConfigLoader[Source].load(Source.fromFile(resource))
+    override def load(resource: File): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val pathLoader = new ConfigLoader[Path] {
-    override def load(resource: Path): Try[Config] = ConfigLoader[Source].load(Source.fromFile(resource.toFile))
+    override def load(resource: Path): Try[Config] = Try(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val inputStreamLoader = new ConfigLoader[InputStream] {
-    override def load(resource: InputStream): Try[Config] = ConfigLoader[Source].load(Source.fromInputStream(resource))
+    override def load(resource: InputStream): Try[Config] = Try(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val uriLoader = new ConfigLoader[URI] {
-    override def load(resource: URI): Try[Config] = ConfigLoader[Source].load(Source.fromFile(resource))
+    override def load(resource: URI): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val urlLoader = new ConfigLoader[URL] {
-    override def load(resource: URL): Try[Config] = ConfigLoader[Source].load(Source.fromURL(resource))
+    override def load(resource: URL): Try[Config] = Try(Source.fromURL(resource)).flatMap(ConfigLoader[Source].load)
   }
 }

@@ -110,7 +110,9 @@ case class Config(configMap: AbstractMap) {
 
   private def getValue(key: String): Try[AbstractValue] = {
     if (key.indexOf(".") != -1)
-      getValueFromMultipleStrings(key.split("\\.").toList)
+      Try(values(key)).recoverWith {
+        case _ => getValueFromMultipleStrings(key.split("\\.").toList)
+      }
     else
       Try(values(key)).recoverWith {
         case _ => Failure(new KeyNotFoundException(key))

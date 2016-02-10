@@ -1,8 +1,5 @@
 # config: a type safe, purely functional configuration library for Scala
 
-## Why another configuration library for Scala?
-Because I needed one that perfectly suited my needs. However, your needs could match mine so, please, go on reading.
-
 ## Not just another Typesafe's config wrapper
 Right from the start I didn't want to depend on other config libraries when I started implementing this one so I wrote
 my own parser for a simple JSON-like syntax.
@@ -29,7 +26,7 @@ As a first step you need to add the dependency to your build file:
 libraryDependencies += "com.lambdista" %% "config" % configVersion
 ```
 
-Note that `configVersion` is the version you want to use. The most recent one is the 0.1.0. 
+Note that `configVersion` is the version you want to use. The most recent one is the 0.1.1. 
 You can find all the released versions [here](https://github.com/lambdista/config/releases).
 
 At the moment only Scala 2.11.x is supported. Support for Scala 2.10.x might be added in future releases.
@@ -57,8 +54,7 @@ Ok, let's see the typical usage scenarios. As a use case consider the following 
 }
 ```
 
-Suppose the previous configuration is in a file called `foo.conf` under the `conf` directory of your project, so 
-the relative path will be: `conf/foo.conf`.
+Suppose the previous configuration is at the relative path will be: `core/src/test/resources/foo.conf`.
 
 You can move around a config choosing one of two approaches: *functional* and *imperative*.
 In the following examples you'll see both.
@@ -70,9 +66,11 @@ the `for expression`. Here are some examples.
 First thing first, load and parse your config:
 
 ```scala
+import scala.util.Try
+
 import java.nio.file.Paths
 
-val confPath = "conf/foo.conf"
+val confPath = "core/src/test/resources/foo.conf"
 
 val config: Try[Config] = Config.from(Paths.get(confPath))
 ```
@@ -330,9 +328,11 @@ mapList = [
 ]
 ```
 
-Suppose it's in a file at the path `examples/conf/typesafe.conf`:
+Suppose it's in a file at the relative path `typesafe/src/test/resources/typesafe.conf`:
 
 ```scala
+import scala.util.Try
+
 import java.io.File
 import com.typesafe.config.{Config => TSConfig, ConfigFactory}
 import com.lambdista.config.typesafe._ // important to bring into scope the ConfigLoader for Typesafe's Config
@@ -341,9 +341,9 @@ case class Person(firstName: String, lastName: String)
 
 case class TypesafeConfig(string: String, int: Int, double: Double, boolean: Boolean, list: List[Int], mapList: List[Person])
 
-val confPath = "examples/conf/typesafe.conf"
+val confPath = "typesafe/src/test/resources/typesafe.conf"
 
-val tsConfig: TSConfig = ConfigFactory.parseFile(new File(path))
+val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
 val configTry: Try[Config] = Config.from(tsConfig)
 

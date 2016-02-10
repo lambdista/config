@@ -65,8 +65,9 @@ object typesafe {
           go(Map.empty[String, AbstractValue], tsConfigEntries)
         }
 
-        val tsConfigEntries: List[(String, ConfigValue)] =
-          tsConfig.entrySet.toList.map(entry => entry.getKey -> entry.getValue)
+        val tsConfigEntries: List[(String, ConfigValue)] = tsConfig.entrySet.toList.map { entry =>
+          entry.getKey -> entry.getValue
+        }
 
         tsConfigEntriesAsConfigMap(tsConfigEntries)
       }

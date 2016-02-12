@@ -12,7 +12,7 @@ object ConfigBuild extends Build {
 
   def commonSettings = Seq(
     moduleName := projectName,
-    version := "0.2.1",
+    version := "0.2.2",
     organization := "com.lambdista",
     scalaVersion := projectScalaVersion,
     (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile) (Seq(_)),
@@ -26,6 +26,7 @@ object ConfigBuild extends Build {
       "-encoding", "utf8",
       "-deprecation",
       "-unchecked"),
+    scalacOptions ++= Seq("-Ypatmat-exhaust-depth", "off"),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     ),

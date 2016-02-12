@@ -182,42 +182,20 @@ case class Config(configMap: AbstractMap) {
     Config(AbstractMap(this.configMap.value ++ thatConfig.configMap.value))
   }
 
-  private def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
+  def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
     def mergeMaps(map1: Map[String, AbstractValue], map2: Map[String, AbstractValue]): Map[String, AbstractValue] = {
-      if (map1.isEmpty)
-        map2
-      else {
-        map1.map { case (k, v) =>
-          val other: Option[AbstractValue] = map2.get(k)
-          k -> (other match {
-            case Some(am: AbstractMap) => v match {
-              case x: AbstractMap => mergeAbstractMaps(x, am)
-              case y => y
-            }
-            case Some(av) => av
-            case None => v
-          })
-        }
-      }
+      val keys = map1.keySet ++ map2.keySet
+
+      keys.map { key =>
+        key -> ((map1.get(key), map2.get(key)) match {
+          case (Some(v1: AbstractMap), Some(v2: AbstractMap)) => mergeAbstractMaps(v1, v2)
+          case (Some(v1), None) => v1
+          case (_, Some(v2)) => v2
+        })
+      }.toMap
     }
 
-    val map1 = abstractMap1.value
-    val map2 = abstractMap2.value
-
-    val abstractMapsFilter: PartialFunction[(String, AbstractValue), Boolean] = {
-      case (_, v: AbstractMap) => true
-      case _ => false
-    }
-
-    val abstractMaps1: Map[String, AbstractValue] = map1.filter(abstractMapsFilter)
-    val abstractMaps2: Map[String, AbstractValue] = map2.filter(abstractMapsFilter)
-
-    val otherAbstractValues1: Map[String, AbstractValue] = map1.filterNot(abstractMapsFilter)
-    val otherAbstractValues2: Map[String, AbstractValue] = map2.filterNot(abstractMapsFilter)
-
-    val mergedMap = mergeMaps(abstractMaps1, abstractMaps2) ++ otherAbstractValues1 ++ otherAbstractValues2
-
-    AbstractMap(mergedMap.toMap)
+    AbstractMap(mergeMaps(abstractMap1.value, abstractMap2.value))
   }
 
   private def getValue(key: String): Try[AbstractValue] = {

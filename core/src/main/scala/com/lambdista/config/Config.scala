@@ -182,7 +182,7 @@ case class Config(configMap: AbstractMap) {
     Config(AbstractMap(this.configMap.value ++ thatConfig.configMap.value))
   }
 
-  def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
+  private def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
     def mergeMaps(map1: Map[String, AbstractValue], map2: Map[String, AbstractValue]): Map[String, AbstractValue] = {
       val keys = map1.keySet ++ map2.keySet
 

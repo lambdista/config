@@ -100,13 +100,121 @@ case class Config(configMap: AbstractMap) {
   def as[A: ConcreteValue]: A = tryAs[A].get
 
   /**
-    * Merges two `Config` objects. Basically if you look at the configuration as `Map`s, the resulting `Config` object
-    * is like using `++` with the two underlying `Map`s, as in thisConfig ++ thatConfig.
+    * Merges two `Config` objects. Given a key, if the correspondent value is a map then `thatConfig`'s value is
+    * "softly" merged to this config's value otherwise `thatConfig`'s value replaces this config's value. E.g.:
+    * {{{
+    *   conf1:
+    *   {
+    	    foo = {
+    	      alpha = 1,
+    	      bar = "hello"
+    	    },
+    	    baz = 42
+       }
+
+       conf2:
+       {
+  	     foo = {
+  	       baz = 15,
+  	       bar = "goodbye"
+  	     },
+  	     baz = 1,
+  	     zoo = "hi"
+       }
+
+       conf1.softMerge(conf2):
+      {
+        foo = {
+          alpha = 1,
+          baz = 15,
+          bar = "goodbye"
+        },
+        baz = 1,
+        zoo = "hi"
+      }
+    * }}}
     *
     * @param thatConfig the `Config` to merge this `Config` with
     * @return
     */
-  def merge(thatConfig: Config): Config = Config(AbstractMap(this.configMap.value ++ thatConfig.configMap.value))
+  def softMerge(thatConfig: Config): Config = {
+    Config(mergeAbstractMaps(this.configMap, thatConfig.configMap))
+  }
+
+  /**
+    * Merges two `Config` objects. Basically if you look at the configuration as `Map`s, the resulting `Config` object
+    * is like using `++` with the two underlying `Map`s, as in thisConfig ++ thatConfig. E.g.:
+    * {{{
+    *   conf1:
+    *   {
+    	    foo = {
+    	      alpha = 1,
+    	      bar = "hello"
+    	    },
+    	    baz = 42,
+          zoo = "hi"
+       }
+
+       conf2:
+       {
+  	     foo = {
+  	       baz = 15,
+  	       bar = "goodbye"
+  	     },
+  	     baz = 1,
+       }
+
+       conf1.softMerge(conf2):
+      {
+        foo = {
+          baz = 15,
+          bar = "goodbye"
+        },
+        baz = 1,
+        zoo = "hi"
+      }
+    * }}}
+    *
+    * @param thatConfig the `Config` to merge this `Config` with
+    * @return
+    */
+  def hardMerge(thatConfig: Config): Config = {
+    Config(AbstractMap(this.configMap.value ++ thatConfig.configMap.value))
+  }
+
+  private def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
+    def mergeMaps(map1: Map[String, AbstractValue], map2: Map[String, AbstractValue]): Map[String, AbstractValue] = {
+      map1.map { case (k, v) =>
+        val other: Option[AbstractValue] = map2.get(k)
+        k -> (other match {
+          case Some(am: AbstractMap) => v match {
+            case x: AbstractMap => mergeAbstractMaps(x, am)
+            case y => y
+          }
+          case Some(av) => av
+          case None => v
+        })
+      }
+    }
+
+    val map1 = abstractMap1.value
+    val map2 = abstractMap2.value
+
+    val abstractMapsFilter: PartialFunction[(String, AbstractValue), Boolean] = {
+      case (_, v: AbstractMap) => true
+      case _ => false
+    }
+
+    val abstractMaps1: Map[String, AbstractValue] = map1.filter(abstractMapsFilter)
+    val abstractMaps2: Map[String, AbstractValue] = map2.filter(abstractMapsFilter)
+
+    val otherAbstractValues1: Map[String, AbstractValue] = map1.filterNot(abstractMapsFilter)
+    val otherAbstractValues2: Map[String, AbstractValue] = map2.filterNot(abstractMapsFilter)
+
+    val mergedMap = mergeMaps(abstractMaps1, abstractMaps2) ++ otherAbstractValues1 ++ otherAbstractValues2
+
+    AbstractMap(mergedMap.toMap)
+  }
 
   private def getValue(key: String): Try[AbstractValue] = {
     if (key.indexOf(".") != -1)

@@ -184,16 +184,20 @@ case class Config(configMap: AbstractMap) {
 
   private def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
     def mergeMaps(map1: Map[String, AbstractValue], map2: Map[String, AbstractValue]): Map[String, AbstractValue] = {
-      map1.map { case (k, v) =>
-        val other: Option[AbstractValue] = map2.get(k)
-        k -> (other match {
-          case Some(am: AbstractMap) => v match {
-            case x: AbstractMap => mergeAbstractMaps(x, am)
-            case y => y
-          }
-          case Some(av) => av
-          case None => v
-        })
+      if (map1.isEmpty)
+        map2
+      else {
+        map1.map { case (k, v) =>
+          val other: Option[AbstractValue] = map2.get(k)
+          k -> (other match {
+            case Some(am: AbstractMap) => v match {
+              case x: AbstractMap => mergeAbstractMaps(x, am)
+              case y => y
+            }
+            case Some(av) => av
+            case None => v
+          })
+        }
       }
     }
 

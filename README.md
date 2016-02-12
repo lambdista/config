@@ -26,7 +26,7 @@ As a first step you need to add the dependency to your build file:
 libraryDependencies += "com.lambdista" %% "config" % configVersion
 ```
 
-Note that `configVersion` is the version you want to use.  
+Note that `configVersion` is the version you want to use. 
 You can find all the released versions [here](https://github.com/lambdista/config/releases).
 
 At the moment only Scala 2.11.x is supported. Support for Scala 2.10.x might be added in future releases.

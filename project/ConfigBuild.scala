@@ -12,7 +12,7 @@ object ConfigBuild extends Build {
 
   def commonSettings = Seq(
     moduleName := projectName,
-    version := "0.1.1",
+    version := "0.2.0",
     organization := "com.lambdista",
     scalaVersion := projectScalaVersion,
     (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile) (Seq(_)),

@@ -35,7 +35,11 @@ class ConfigSpec extends UnitSpec {
 
   case class FooConfig(bar: String, baz: Option[Int], list: List[Int], mapList: List[Greek], range: Range, duration: Duration)
 
-  case class Person(name: String, age: Int)
+  case class SoftFoo(alpha: Int, baz: Int, bar: String)
+  case class SoftMerge(foo: SoftFoo, baz: Int, zoo: String)
+
+  case class HardFoo(baz: Int, bar: String)
+  case class HardMerge(foo: HardFoo, baz: Int, zoo: String)
 
   def areSuccesses(tries: Try[_]*): Boolean = tries.forall(_.isSuccess)
 
@@ -154,10 +158,30 @@ class ConfigSpec extends UnitSpec {
     assert(mapList.isSuccess)
   }
 
-  "The result of merging two configs" should
-    "be a new config whose elements are those of the lhs config (with respect to the merge method) plus those of the rhs config" in {
-    val confStr1 = """{name: "John"}"""
-    val confStr2 = """{age: 42}"""
+  "The result of softly merging two configs" should
+    "be a new config where, given a key, if the correspondent value is a map then the rhs config's value is " +
+      "*softly* merged to the lhs config's value otherwise the rhs config's value replaces the lhs config's value." in {
+    val confStr1 =
+      """
+        |{
+        |  foo = {
+        |    alpha = 1,
+        |    bar = "hello"
+        |  },
+        |  baz = 42
+        |}
+      """.stripMargin
+    val confStr2 =
+      """
+        |{
+        |  foo = {
+        |    baz = 15,
+        |    bar = "goodbye"
+        |  },
+        |  baz = 1,
+        |  zoo = "hi"
+        |}
+      """.stripMargin
 
     val config1: Try[Config] = Config.from(confStr1)
     val config2: Try[Config] = Config.from(confStr2)
@@ -165,19 +189,42 @@ class ConfigSpec extends UnitSpec {
     val config: Try[Config] = for {
       c1 <- config1
       c2 <- config2
-    } yield c1.merge(c2)
+    } yield c1.softMerge(c2)
 
-    val person: Try[Person] = for {
+    val person: Try[SoftMerge] = for {
       c <- config
-      p <- c.tryAs[Person]
+      p <- c.tryAs[SoftMerge]
     } yield p
 
-    person should matchPattern { case Success(Person("John", 42)) => }
+    val expectedResult = SoftMerge(SoftFoo(alpha = 1, baz = 15, bar = "goodbye"), baz = 1, zoo = "hi")
+
+    person should matchPattern { case Success(`expectedResult`) => }
   }
 
-  it should "replace the lhs config elements with the rhs config elements in case of key collisions" in {
-    val confStr1 = """{name: "John"}"""
-    val confStr2 = """{name: "Jane", age: 42}"""
+  "The result of hardly merging two configs" should
+    "be similar to Scala's default behaviour when using `++` between two `Map`s and the rhs config's values " +
+      "replace entirely the lhs config's values with the same key" in {
+    val confStr1 =
+      """
+        |{
+        |  foo = {
+        |    alpha = 1,
+        |    bar = "hello"
+        |  },
+        |  zoo = "hi",
+        |  baz = 42
+        |}
+      """.stripMargin
+    val confStr2 =
+      """
+        |{
+        |  foo = {
+        |    baz = 15,
+        |    bar = "goodbye"
+        |  },
+        |  baz = 1
+        |}
+      """.stripMargin
 
     val config1: Try[Config] = Config.from(confStr1)
     val config2: Try[Config] = Config.from(confStr2)
@@ -185,21 +232,22 @@ class ConfigSpec extends UnitSpec {
     val config: Try[Config] = for {
       c1 <- config1
       c2 <- config2
-    } yield c1.merge(c2)
+    } yield c1.softMerge(c2)
 
-    val person: Try[Person] = for {
+    val person: Try[HardMerge] = for {
       c <- config
-      p <- c.tryAs[Person]
+      p <- c.tryAs[HardMerge]
     } yield p
 
-    // Jane replace John as the value of the key `name`
-    person should matchPattern { case Success(Person("Jane", 42)) => }
+    val expectedResult = HardMerge(HardFoo(baz = 15, bar = "goodbye"), baz = 1, zoo = "hi")
+
+    person should matchPattern { case Success(`expectedResult`) => }
   }
 
   "A config value" should "be callable using the \"dot\" syntax" in {
     val confStr =
       """{
-        |foo = {bar = 42}
+        |  foo = {bar = 42}
         |}
       """.stripMargin
 

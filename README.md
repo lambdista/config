@@ -1,6 +1,6 @@
 # config: a type safe, purely functional configuration library for Scala
 
-## Not just another Typesafe's config wrapper
+## Not only another Typesafe's config wrapper
 Right from the start I didn't want to depend on other config libraries when I started implementing this one so I wrote
 my own parser for a simple JSON-like syntax.
 Hence, this is not just another [Typesafe's config](https://github.com/typesafehub/config) wrapper. Of course,
@@ -364,28 +364,98 @@ Success(TypesafeConfig(hello,42,1.414,true,List(1, 2, 3),List(Person(John,Doe), 
 ```
 
 ### Merging two configurations
-You can also merge two configurations using the `merge` method of `Config`:
+You can also merge two configurations using the `softMerge` or `hardMerge` methods of `Config`, 
+as in `config.softMerge(thatConfig)` or `config.hardMerge(thatConfig)`. The behaviour of the
+former is that, given a key, if the correspondent value is a map then `thatConfig`'s value is
+*softly* merged to this config's value otherwise `thatConfig`'s value replaces this config's value. An example should
+clarify it:
 
 ```scala
-val confStr1 = """{age = null, name = "John"}"""
+val confStr1 = """
+{
+  foo = {
+    alpha = 1,
+    bar = "hello"
+  },
+  baz = 42
+}
+"""
+
+val confStr2 = """
+{
+  foo = {
+    baz = 15,
+    bar = "goodbye"
+  },
+  baz = 1,
+  zoo = "hi"
+}
+"""
+
 val config1: Config = Config.from(confStr1).get
 
-val confStr2 = """{age = 42}"""
 val config2: Config = Config.from(confStr2).get
 
-val mergedConfig: Config = config1.merge(config2)
-
-val name: String = mergedConfig.get[String]("name")
-val age: Option[Int] = mergedConfig.get[Option[Int]]("age")
+val mergedConfig: Config = config1.softMerge(config2)
 ```
 
-The values of the keys belonging to the config object passed to the `merge` method will replace 
-the homonym keys belonging to the config object `merge` is called on. 
-So, in the previous example, the values of `name` and `age` will be:
+`mergedConfig` will represent a config such as the following:
+```
+{
+  foo = {
+    alpha = 1,
+    baz = 15,
+    bar = "goodbye"
+  },
+  baz = 1,
+  zoo = "hi"
+}
+```
 
+As you can see the value of `config2`'s `foo` did not replace entirely the value of `config1`'s `foo`, but they
+were *softly* merged.
+
+On the other hand `hardMerge`'s behaviour is more like Scala's default behaviour when using `++` between two `Map`s and
+`config2`'s values replace entirely `config1`'s values with the same key. E.g.:
 ```scala
-John // name
-Some(42) // age
+val confStr1 = """
+{
+  foo = {
+    alpha = 1,
+    bar = "hello"
+  },
+  zoo = "hi",
+  baz = 42
+}
+"""
+
+val confStr2 = """
+{
+  foo = {
+    baz = 15,
+    bar = "goodbye"
+  },
+  baz = 1
+}
+"""
+
+val config1: Config = Config.from(confStr1).get
+
+val config2: Config = Config.from(confStr2).get
+
+val mergedConfig: Config = config1.softMerge(config2)
+``` 
+
+`mergedConfig` will represent a config such as the following:
+```
+{
+  foo = {
+    baz = 15,
+    bar = "goodbye"
+  },
+  baz = 1,
+  zoo = "hi"
+}
 ```
 
 Look at the tests for this library to see the examples in practise.

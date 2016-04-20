@@ -261,6 +261,23 @@ class ConfigSpec extends UnitSpec {
     bar should matchPattern { case Success(42) => }
   }
 
+  "A config string" should "work if it contains escaped chars" in {
+    val confStr =
+      """{
+        |  foo = "\"hello world\""
+        |}
+      """.stripMargin
+
+    val config: Try[Config] = Config.from(confStr)
+
+    val foo: Try[String] = for {
+      c <- config
+      f <- c.tryGet[String]("foo")
+    } yield f
+
+    foo should matchPattern { case Success("\\\"hello world\\\"") => }
+  }
+
   "An ill-formed config" should "fail with a ConfigSyntaxException" in {
     val confStr = "{a = 42"
 

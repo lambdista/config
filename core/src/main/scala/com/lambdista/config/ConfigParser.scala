@@ -15,23 +15,17 @@ import org.parboiled2._
 object ConfigParser {
 
   private class ConfigParserImpl(val input: ParserInput) extends Parser {
-    val isStringChars: Char => Boolean = c => !("\"\\" contains c)
-    val isIdentifier: Char => Boolean = c => !(":= \"" contains c)
+    val isStringChars: Char => Boolean = c => !"\"\\".toSet(c)
+    val isIdentifier: Char => Boolean = c => !":= \"".toSet(c)
 
     def WS = rule {
       zeroOrMore(anyOf(" \n\r\t\f"))
     }
 
-    //    def NL = rule { optional('\r') ~ '\n' }
-
-    //    def WNL = rule { WS ~ NL ~ WS}
-
-
     def cw(char: Char): Rule0 = rule {
       char ~ WS
     }
 
-    //    def wc(char: Char): Rule0 = rule { WS ~ char }
     def wcw(char: Char): Rule0 = rule {
       WS ~ char ~ WS
     }
@@ -72,6 +66,10 @@ object ConfigParser {
       "u" ~ 4.times(CharPredicate.HexDigit)
     }
 
+    def singleQuote: Rule0 = rule {
+      ch('"')
+    }
+
     def escape: Rule0 = rule {
       "\\" ~ (anyOf("\"/\\bfnrt") | unicodeEscape)
     }
@@ -81,7 +79,7 @@ object ConfigParser {
     }
 
     def quotedIdentifier: Rule1[String] = rule {
-      WS ~ "\"" ~ capture(CharPredicate.from(_ != '"').+) ~ "\"" ~ WS
+      WS ~ singleQuote ~ capture(CharPredicate.from(_ != '"').+) ~ singleQuote ~ WS
     }
 
     def strChars: Rule0 = rule {
@@ -89,7 +87,7 @@ object ConfigParser {
     }
 
     def string: Rule1[AbstractString] = rule {
-      WS ~ "\"" ~ capture((strChars | escape).+) ~> AbstractString ~ "\""
+      WS ~ singleQuote ~ capture((strChars | escape).*) ~> AbstractString ~ singleQuote
     }
 
     def aChar: Rule1[Char] = rule {

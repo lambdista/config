@@ -4,7 +4,6 @@ lazy val projectName = "config"
 
 lazy val commonSettings = Seq(
   moduleName := projectName,
-  version := "0.3.0",
   organization := "com.lambdista",
   scalaVersion := "2.11.8",
   (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile) (Seq(_)),

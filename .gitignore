@@ -18,3 +18,4 @@ logs/
 .idea_modules
 *.iml
 *.iws
+.bumpversion.cfg

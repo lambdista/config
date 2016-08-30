@@ -16,7 +16,7 @@
 import sbt.Keys._
 import sbt._
 
-object Publishing extends SonatypePublishing(ConfigBuild) {
+object Publishing extends SonatypePublishing() {
   val projectUrl = "https://github.com/lambdista/config"
   val developerId = "lambdista"
   val developerName = "Alessandro Lacava"
@@ -25,7 +25,7 @@ object Publishing extends SonatypePublishing(ConfigBuild) {
   val licenseUrl = "http://www.apache.org/licenses/LICENSE-2.0.txt"
 }
 
-abstract class SonatypePublishing(build: Build) {
+abstract class SonatypePublishing() {
   def projectUrl: String
   def developerId: String
   def developerName: String

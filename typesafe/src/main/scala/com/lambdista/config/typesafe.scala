@@ -39,15 +39,17 @@ object typesafe {
             .toTry(new TypesafeConversionException(s"Could not convert $tsConfigList to a ConfigValue"))
         }
 
-        def convertConfigValue(tsConfigValue: ConfigValue): Try[AbstractValue] = tsConfigValue.valueType match {
-          case ConfigValueType.NULL => Success(AbstractNone)
-          case ConfigValueType.BOOLEAN => unwrap[Boolean](tsConfigValue).map(AbstractBool)
-          case ConfigValueType.NUMBER => unwrap[Number](tsConfigValue).map(n => AbstractNumber(n.doubleValue))
-          case ConfigValueType.STRING => unwrap[String](tsConfigValue).map(AbstractString)
-          case ConfigValueType.OBJECT => convertConfigObject(tsConfigValue)
-          case ConfigValueType.LIST => convertConfigList(tsConfigValue.asInstanceOf[ConfigList])
+        def convertConfigValue(tsConfigValue: ConfigValue): Try[AbstractValue] = {
+          tsConfigValue.valueType match {
+            case ConfigValueType.NULL => Success(AbstractNone)
+            case ConfigValueType.BOOLEAN => unwrap[Boolean](tsConfigValue).map(AbstractBool)
+            case ConfigValueType.NUMBER => unwrap[Number](tsConfigValue).map(n => AbstractNumber(n.doubleValue))
+            case ConfigValueType.STRING => unwrap[String](tsConfigValue).map(AbstractString)
+            case ConfigValueType.OBJECT => convertConfigObject(tsConfigValue)
+            case ConfigValueType.LIST => convertConfigList(tsConfigValue.asInstanceOf[ConfigList])
 
-          case _ => Failure(new TypesafeConversionException(s"Could not convert $tsConfigValue to a ConfigValue"))
+            case _ => Failure(new TypesafeConversionException(s"Could not convert $tsConfigValue to a ConfigValue"))
+          }
         }
 
         def tsConfigEntriesAsConfigMap(tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
@@ -66,7 +68,15 @@ object typesafe {
         }
 
         val tsConfigEntries: List[(String, ConfigValue)] = tsConfig.entrySet.toList.map { entry =>
-          entry.getKey -> entry.getValue
+          val key = entry.getKey
+          val value = entry.getValue
+
+          if (key.indexOf('.') == -1) {
+            key -> value
+          } else {
+            val rootKey = key.takeWhile(_ != '.')
+            rootKey -> tsConfig.getObject(rootKey)
+          }
         }
 
         tsConfigEntriesAsConfigMap(tsConfigEntries)

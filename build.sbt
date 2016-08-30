@@ -25,7 +25,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val config = (project in file("."))
-  .aggregate(core)
+  .aggregate(core, typesafe)
   .dependsOn(core)
   .settings(commonSettings: _*)
   .settings(

@@ -18,6 +18,7 @@ lazy val commonSettings = Seq(
     "-deprecation",
     "-unchecked"),
   scalacOptions ++= Seq("-Ypatmat-exhaust-depth", "off"),
+  scalafmtConfig := Some(file(".scalafmt")),
   initialCommands in console :=
     """
       |import com.lambdista.config._

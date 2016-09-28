@@ -191,6 +191,7 @@ case class Config(configMap: AbstractMap) {
           case (Some(v1: AbstractMap), Some(v2: AbstractMap)) => mergeAbstractMaps(v1, v2)
           case (Some(v1), None) => v1
           case (_, Some(v2)) => v2
+          case _ => AbstractNone // no way! it could never end up here. I just hate match-not-exhaustive warnings. ;-)
         })
       }.toMap
     }

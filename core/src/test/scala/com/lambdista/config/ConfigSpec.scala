@@ -10,7 +10,7 @@ import scala.util.{Success, Try}
 /**
   * Unit Test for Config.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2016-01-12
   */
 class ConfigSpec extends UnitSpec {
@@ -23,17 +23,23 @@ class ConfigSpec extends UnitSpec {
       |}""".stripMargin
   val configFromStr: Try[Config] = Config.from(confStr)
 
-  val confPath = "core/src/test/resources/foo.conf"
+  val confPath            = "core/src/test/resources/foo.conf"
   val config: Try[Config] = Config.from(Paths.get(confPath))
 
-  def convertTo[A: ConcreteValue](key: String) = for {
-    c <- config
-    a <- c.tryGet[A](key)
-  } yield a
+  def convertTo[A: ConcreteValue](key: String) =
+    for {
+      c <- config
+      a <- c.tryGet[A](key)
+    } yield a
 
   case class Greek(alpha: String, beta: Int)
 
-  case class FooConfig(bar: String, baz: Option[Int], list: List[Int], mapList: List[Greek], range: Range, duration: Duration)
+  case class FooConfig(bar: String,
+                       baz: Option[Int],
+                       list: List[Int],
+                       mapList: List[Greek],
+                       range: Range,
+                       duration: Duration)
 
   case class SoftFoo(alpha: Int, baz: Int, bar: String)
   case class SoftMerge(foo: SoftFoo, baz: Int, zoo: String)
@@ -80,7 +86,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A well-formed config represented by a resource in the class path" should "be loaded correctly" in {
-    val is: InputStream = getClass.getResourceAsStream("/foo.conf")
+    val is: InputStream     = getClass.getResourceAsStream("/foo.conf")
     val config: Try[Config] = Config.from(is)
 
     assert(config.isSuccess)
@@ -102,7 +108,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A config whose keys do not match exactly the case class field names" should "be transformable so that they match" in {
-    val confPath = "core/src/test/resources/fooish.conf"
+    val confPath            = "core/src/test/resources/fooish.conf"
     val config: Try[Config] = Config.from(Paths.get(confPath))
 
     val fooConfig: Try[FooConfig] = for {
@@ -130,24 +136,56 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A range element config element" should "be convertible into a List, but also into a Vector or Set" in {
-    val range: Try[Range] = convertTo[Range]("range")
-    val rangeAsList: Try[List[Int]] = convertTo[List[Int]]("range")
+    val range: Try[Range]               = convertTo[Range]("range")
+    val rangeAsList: Try[List[Int]]     = convertTo[List[Int]]("range")
     val rangeAsVector: Try[Vector[Int]] = convertTo[Vector[Int]]("range")
-    val rangeAsSet: Try[Set[Int]] = convertTo[Set[Int]]("range")
+    val rangeAsSet: Try[Set[Int]]       = convertTo[Set[Int]]("range")
 
     assert(areSuccesses(range, rangeAsList, rangeAsVector, rangeAsSet))
   }
 
   "A list config element" should "be convertible into a List, but also into a Vector or Set" in {
-    val list: Try[List[Greek]] = convertTo[List[Greek]]("mapList")
+    val list: Try[List[Greek]]           = convertTo[List[Greek]]("mapList")
     val listAsVector: Try[Vector[Greek]] = convertTo[Vector[Greek]]("mapList")
-    val listAsSet: Try[Set[Greek]] = convertTo[Set[Greek]]("mapList")
+    val listAsSet: Try[Set[Greek]]       = convertTo[Set[Greek]]("mapList")
 
     assert(areSuccesses(list, listAsVector, listAsSet))
   }
 
+  "A config" should "be convertible into a case class with other nested case classes" in {
+    val configStr =
+      """
+        |{
+        |  authMode = "SCRAM-SHA-1",
+        |  timeout = 5 seconds,
+        |  connectionsPerNode = 10,
+        |  keepAlive = true,
+        |  failover = {
+        |    initialDelay = 1 second,
+        |    retries = 15,
+        |    delayFactor = 1.0
+        |  }
+        |}
+      """.stripMargin
+
+    val config: Try[Config] = Config.from(configStr)
+
+    case class Failover(initialDelay: Duration, retries: Int, delayFactor: Double)
+    case class ConnOptions(
+        authMode: String,
+        timeout: Duration,
+        connectionsPerNode: Int,
+        keepAlive: Boolean,
+        failover: Failover
+    )
+
+    val result: Try[ConnOptions] = config.flatMap(_.tryAs[ConnOptions])
+
+    assert(areSuccesses(result))
+  }
+
   "A map config element" should "be convertible into a Map[String, A] too. Provided an instance of ConcreteValue[A] exists for A" in {
-    val confStr = "{ map = { foo = 42, bar = 24} }"
+    val confStr             = "{ map = { foo = 42, bar = 24} }"
     val config: Try[Config] = Config.from(confStr)
 
     val mapList: Try[Map[String, Int]] = for {
@@ -254,7 +292,7 @@ class ConfigSpec extends UnitSpec {
     val config: Try[Config] = Config.from(confStr)
 
     val bar: Try[Int] = for {
-      c <- config
+      c   <- config
       bar <- c.tryGet[Int]("foo.bar")
     } yield bar
 

@@ -31,14 +31,14 @@ object ConcreteValue {
   implicit val abstractMap: ConcreteValue[AbstractMap] = new ConcreteValue[AbstractMap] {
     override def apply(abstractValue: AbstractValue): Option[AbstractMap] = abstractValue match {
       case x: AbstractMap => Some(x)
-      case _ => None
+      case _              => None
     }
   }
 
   implicit val boolValue: ConcreteValue[Boolean] = new ConcreteValue[Boolean] {
     override def apply(abstractValue: AbstractValue): Option[Boolean] = abstractValue match {
       case AbstractBool(b) => Some(b)
-      case _ => None
+      case _               => None
     }
   }
 
@@ -59,7 +59,7 @@ object ConcreteValue {
   implicit val doubleValue: ConcreteValue[Double] = new ConcreteValue[Double] {
     override def apply(abstractValue: AbstractValue): Option[Double] = abstractValue match {
       case AbstractNumber(n) => Some(n.toDouble)
-      case _ => None
+      case _                 => None
     }
   }
 
@@ -74,36 +74,36 @@ object ConcreteValue {
   implicit val stringValue: ConcreteValue[String] = new ConcreteValue[String] {
     override def apply(abstractValue: AbstractValue): Option[String] = abstractValue match {
       case AbstractString(s) => Some(s)
-      case _ => None
+      case _                 => None
     }
   }
 
   implicit val durationValue: ConcreteValue[Duration] = new ConcreteValue[Duration] {
     def apply(abstractValue: AbstractValue) = abstractValue match {
       case AbstractDuration(d) => Some(d)
-      case _ => None
+      case _                   => None
     }
   }
 
   implicit val rangeValue: ConcreteValue[Range] = new ConcreteValue[Range] {
     def apply(abstractValue: AbstractValue) = abstractValue match {
       case AbstractRange(r) => Some(r)
-      case _ => None
+      case _                => None
     }
   }
 
   implicit def optionValue[A](implicit A: ConcreteValue[A]): ConcreteValue[Option[A]] = new ConcreteValue[Option[A]] {
     override def apply(abstractValue: AbstractValue): Option[Option[A]] = abstractValue match {
       case x: AbstractNone.type => Some(None)
-      case x => Some(A.apply(x))
+      case x                    => Some(A.apply(x))
     }
   }
 
   implicit def listValue[A](implicit A: ConcreteValue[A]): ConcreteValue[List[A]] = new ConcreteValue[List[A]] {
     def apply(abstractValue: AbstractValue): Option[List[A]] = abstractValue match {
-      case AbstractList(xs) => sequence(xs.map(A.apply))
+      case AbstractList(xs)  => sequence(xs.map(A.apply))
       case AbstractRange(xs) => sequence(xs.toList.map(x => AbstractNumber(x.toDouble)).map(A.apply))
-      case _ => None
+      case _                 => None
     }
   }
 
@@ -119,10 +119,11 @@ object ConcreteValue {
     def traverseMap[A](m: Map[String, Option[A]]): Option[Map[String, A]] = {
       @tailrec
       def go(xs: List[(String, Option[A])], acc: Map[String, A]): Option[Map[String, A]] = xs match {
-        case a :: as => a._2 match {
-          case Some(v) => go(as, acc + ((a._1, v)))
-          case None => None
-        }
+        case a :: as =>
+          a._2 match {
+            case Some(v) => go(as, acc + ((a._1, v)))
+            case None    => None
+          }
         case Nil => Some(acc)
       }
 
@@ -136,51 +137,52 @@ object ConcreteValue {
     }
   }
 
-  implicit def caseClassValue[A, R <: HList](implicit
-                                             gen: LabelledGeneric.Aux[A, R],
-                                             fromMap: FromMap[R]
-                                            ): ConcreteValue[A] = new ConcreteValue[A] {
+  implicit def caseClassValue[A, R <: HList](
+      implicit gen: LabelledGeneric.Aux[A, R],
+      fromMap: Lazy[FromMap[R]]
+  ): ConcreteValue[A] = new ConcreteValue[A] {
     override def apply(abstractValue: AbstractValue): Option[A] =
-      abstractValue.tryAs[AbstractMap].toOption.flatMap(x => fromMap(x.value).map(gen.from))
+      abstractValue.tryAs[AbstractMap].toOption.flatMap(x => fromMap.value(x.value).map(gen.from))
   }
 
-  private trait FromMap[L <: HList] {
+  trait FromMap[L <: HList] {
     def apply(m: Map[String, AbstractValue]): Option[L]
   }
 
-  private trait LowPriorityFromMap {
-    implicit def hconsFromMap1[K <: Symbol, V, T <: HList](implicit
-                                                           witness: Witness.Aux[K],
-                                                           concreteValue: ConcreteValue[V],
-                                                           fromMapT: FromMap[T]
-                                                          ): FromMap[FieldType[K, V] :*: T] =
+  trait LowPriorityFromMap {
+    implicit def hconsFromMap1[K <: Symbol, V, T <: HList](
+        implicit witness: Witness.Aux[K],
+        concreteValue: ConcreteValue[V],
+        fromMapT: Lazy[FromMap[T]]
+    ): FromMap[FieldType[K, V] :*: T] =
       new FromMap[FieldType[K, V] :*: T] {
-        def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] = for {
-          v <- m.get(witness.value.name)
-          h <- concreteValue.apply(v)
-          t <- fromMapT(m)
-        } yield field[K](h) :: t
+        def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
+          for {
+            v <- m.get(witness.value.name)
+            h <- concreteValue.apply(v)
+            t <- fromMapT.value(m)
+          } yield field[K](h) :: t
       }
   }
 
-  private object FromMap extends LowPriorityFromMap {
+  object FromMap extends LowPriorityFromMap {
     implicit val hnilFromMap: FromMap[HNil] = new FromMap[HNil] {
       def apply(m: Map[String, AbstractValue]): Option[HNil] = Some(HNil)
     }
 
-    implicit def hconsFromMap0[K <: Symbol, V, R <: HList, T <: HList](implicit
-                                                                       witness: Witness.Aux[K],
-                                                                       gen: LabelledGeneric.Aux[V, R],
-                                                                       fromMapH: FromMap[R],
-                                                                       fromMapT: FromMap[T]
-                                                                      ): FromMap[FieldType[K, V] :*: T] =
+    implicit def hconsFromMap0[K <: Symbol, V, R <: HList, T <: HList](
+        implicit witness: Witness.Aux[K],
+        gen: LabelledGeneric.Aux[V, R],
+        fromMapH: Lazy[FromMap[R]],
+        fromMapT: Lazy[FromMap[T]]): FromMap[FieldType[K, V] :*: T] =
       new FromMap[FieldType[K, V] :*: T] {
-        def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] = for {
-          v <- m.get(witness.value.name)
-          r <- v.tryAs[Map[String, AbstractValue]].toOption
-          h <- fromMapH(r)
-          t <- fromMapT(m)
-        } yield field[K](gen.from(h)) :: t
+        def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
+          for {
+            v <- m.get(witness.value.name)
+            r <- v.tryAs[Map[String, AbstractValue]].toOption
+            h <- fromMapH.value(r)
+            t <- fromMapT.value(m)
+          } yield field[K](gen.from(h)) :: t
       }
   }
 }

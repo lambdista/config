@@ -12,11 +12,12 @@ import scala.util.Try
 /**
   * This type class represents a configuration loader.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2015-12-01
   */
 @implicitNotFound("No instance, of the ConfigLoader type class, found for ${R}")
 trait ConfigLoader[R] {
+
   /**
     * Loads the configuration from `resource`.
     *
@@ -36,7 +37,8 @@ object ConfigLoader {
 
   implicit val sourceLoader = new ConfigLoader[Source] {
     override def load(resource: Source): Try[Config] = {
-      val lines = try resource.mkString finally resource.close()
+      val lines = try resource.mkString
+      finally resource.close()
 
       ConfigLoader[String].load(lines)
     }
@@ -47,11 +49,13 @@ object ConfigLoader {
   }
 
   implicit val pathLoader = new ConfigLoader[Path] {
-    override def load(resource: Path): Try[Config] = Try(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
+    override def load(resource: Path): Try[Config] =
+      Try(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val inputStreamLoader = new ConfigLoader[InputStream] {
-    override def load(resource: InputStream): Try[Config] = Try(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
+    override def load(resource: InputStream): Try[Config] =
+      Try(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val uriLoader = new ConfigLoader[URI] {

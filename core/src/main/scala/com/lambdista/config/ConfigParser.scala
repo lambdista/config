@@ -9,14 +9,14 @@ import org.parboiled2._
 /**
   * Configuration parser.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2015-12-09
   */
 object ConfigParser {
 
   private class ConfigParserImpl(val input: ParserInput) extends Parser {
     val isStringChars: Char => Boolean = c => !"\"\\".toSet(c)
-    val isIdentifier: Char => Boolean = c => !":= \"".toSet(c)
+    val isIdentifier: Char => Boolean  = c => !":= \"".toSet(c)
 
     def WS = rule {
       zeroOrMore(anyOf(" \n\r\t\f"))
@@ -100,12 +100,12 @@ object ConfigParser {
 
     def validDurations: Rule0 = rule {
       "days" | "day" | "d" |
-      "hours" | "hour" | "h" |
-      "minutes" | "minute" | "min" |
-      "seconds" | "second" | "secs" | "sec" | "s" |
-      "milliseconds" | "millisecond" | "millis" | "milli" | "ms" |
-      "microseconds" | "microsecond" | "micros" | "µs" |
-      "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns"
+        "hours" | "hour" | "h" |
+        "minutes" | "minute" | "min" |
+        "seconds" | "second" | "secs" | "sec" | "s" |
+        "milliseconds" | "millisecond" | "millis" | "milli" | "ms" |
+        "microseconds" | "microsecond" | "micros" | "µs" |
+        "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns"
     }
 
     def duration: Rule1[AbstractDuration] = rule {
@@ -115,7 +115,7 @@ object ConfigParser {
 
     def createRange(start: Int, method: String, end: Int, optStep: Option[Int]): Range = {
       val baseRange = method match {
-        case "to" => start to end
+        case "to"    => start to end
         case "until" => start until end
       }
 
@@ -124,15 +124,18 @@ object ConfigParser {
 
     def intRange: Rule1[AbstractRange] = {
       rule {
-        capture(integer) ~ WS ~ capture("to" | "until") ~ WS ~ capture(integer) ~ WS ~ optional(("by" ~ WS ~ capture(integer))) ~>
-          ((start: String, method: String, end: String, optStep: Option[String]) => AbstractRange(createRange(start.toInt, method, end.toInt, optStep.map(_.toInt))))
+        capture(integer) ~ WS ~ capture("to" | "until") ~ WS ~ capture(integer) ~ WS ~ optional(
+          ("by" ~ WS ~ capture(integer))) ~>
+          ((start: String, method: String, end: String, optStep: Option[String]) =>
+             AbstractRange(createRange(start.toInt, method, end.toInt, optStep.map(_.toInt))))
       }
     }
 
     def charRange: Rule1[AbstractRange] = {
       rule {
         aChar ~ WS ~ capture("to" | "until") ~ WS ~ aChar ~ WS ~ optional(("by" ~ WS ~ capture(integer))) ~>
-          ((start: Char, method: String, end: Char, optStep: Option[String]) => AbstractRange(createRange(start, method, end, optStep.map(_.toInt))))
+          ((start: Char, method: String, end: Char,
+            optStep: Option[String]) => AbstractRange(createRange(start, method, end, optStep.map(_.toInt))))
       }
     }
 
@@ -145,7 +148,8 @@ object ConfigParser {
     }
 
     def pair: Rule1[(String, AbstractValue)] = rule {
-      ((identifier | quotedIdentifier) ~ (wcw(':') | wcw('=')) ~ configValue) ~> ((a: String, b: AbstractValue) => (a, b))
+      ((identifier | quotedIdentifier) ~ (wcw(':') | wcw('=')) ~ configValue) ~> ((a: String,
+                                                                                   b: AbstractValue) => (a, b))
     }
 
     def map: Rule1[AbstractMap] = rule {

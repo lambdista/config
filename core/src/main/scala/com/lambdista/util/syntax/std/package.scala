@@ -5,7 +5,7 @@ package syntax
 /**
   * Syntax for standard library data structures.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2016-01-05
   */
 package object std {

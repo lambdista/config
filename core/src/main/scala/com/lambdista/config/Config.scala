@@ -8,7 +8,7 @@ import com.lambdista.util.syntax.std.option._
 /**
   * This class represents the configuration.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2015-11-27
   */
 case class Config(configMap: AbstractMap) {
@@ -71,8 +71,7 @@ case class Config(configMap: AbstractMap) {
     * }}}
     * @return a `Try[A]`, which is a Success if the conversion is successful, a Failure if it's not.
     */
-  def tryAs[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(configMap)
-    .toTry(new ConversionException(configMap))
+  def tryAs[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(configMap).toTry(new ConversionException(configMap))
 
   /**
     * Tries to convert the configuration to a type for which exists an instance of
@@ -189,9 +188,9 @@ case class Config(configMap: AbstractMap) {
       keys.map { key =>
         key -> ((map1.get(key), map2.get(key)) match {
           case (Some(v1: AbstractMap), Some(v2: AbstractMap)) => mergeAbstractMaps(v1, v2)
-          case (Some(v1), None) => v1
-          case (_, Some(v2)) => v2
-          case _ => AbstractNone // no way! it could never end up here. I just hate match-not-exhaustive warnings. ;-)
+          case (Some(v1), None)                               => v1
+          case (_, Some(v2))                                  => v2
+          case _                                              => AbstractNone // no way! it could never end up here. I just hate match-not-exhaustive warnings. ;-)
         })
       }.toMap
     }
@@ -203,17 +202,16 @@ case class Config(configMap: AbstractMap) {
     if (key.indexOf(".") != -1)
       Try(values(key)).recoverWith {
         case _ => getValueFromMultipleStrings(key.split("\\.").toList)
-      }
-    else
+      } else
       Try(values(key)).recoverWith {
         case _ => Failure(new KeyNotFoundException(key))
       }
   }
 
   private def getValueFromMultipleStrings(keys: List[String]): Try[AbstractValue] = {
-    val head = keys.head
+    val head   = keys.head
     val middle = keys.tail.init
-    val last = keys.last
+    val last   = keys.last
 
     val zero = Try(values(head)).flatMap(_.tryAs[AbstractMap])
 

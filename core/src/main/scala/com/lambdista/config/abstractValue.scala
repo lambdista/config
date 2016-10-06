@@ -9,10 +9,11 @@ import com.lambdista.util.syntax.std.option._
 /**
   * The abstract config value.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2015-11-27
   */
 sealed trait AbstractValue {
+
   /**
     * Tries to convert this `AbstractValue` into an `A`, provided that there's an implicit
     * implementation of `ConcreteValue[A]` in scope.
@@ -79,7 +80,8 @@ case class AbstractMap(value: Map[String, AbstractValue]) extends AbstractValue 
     s"{$s}"
   }
 
-  def transformKeys(f: PartialFunction[String, String]): AbstractMap = AbstractMap(value.map {
-    case (k, v) => f.applyOrElse(k, identity[String]) -> v
-  })
+  def transformKeys(f: PartialFunction[String, String]): AbstractMap =
+    AbstractMap(value.map {
+      case (k, v) => f.applyOrElse(k, identity[String]) -> v
+    })
 }

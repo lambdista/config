@@ -8,13 +8,13 @@ import scala.util.{Failure, Success, Try}
 /**
   * Extension class for `Option[A]`.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2016-01-05
   */
 final class OptionOps[A](val opt: Option[A]) extends AnyVal {
   def toTry(ifFailure: => Throwable): Try[A] = opt match {
     case Some(x) => Success(x)
-    case None => Failure(ifFailure)
+    case None    => Failure(ifFailure)
   }
 }
 

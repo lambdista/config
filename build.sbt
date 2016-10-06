@@ -6,19 +6,19 @@ lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := "2.11.8",
-  (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile) (Seq(_)),
-  (unmanagedSourceDirectories in Test) <<= (scalaSource in Test) (Seq(_)),
-  scalacOptions := Seq(
-    "-feature",
-    "-language:dynamics",
-    "-language:higherKinds",
-    "-language:implicitConversions",
-    "-language:postfixOps",
-    "-encoding", "utf8",
-    "-deprecation",
-    "-unchecked"),
+  (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile)(Seq(_)),
+  (unmanagedSourceDirectories in Test) <<= (scalaSource in Test)(Seq(_)),
+  scalacOptions := Seq("-feature",
+                       "-language:dynamics",
+                       "-language:higherKinds",
+                       "-language:implicitConversions",
+                       "-language:postfixOps",
+                       "-encoding",
+                       "utf8",
+                       "-deprecation",
+                       "-unchecked"),
   scalacOptions ++= Seq("-Ypatmat-exhaust-depth", "off"),
-  scalafmtConfig := Some(file(".scalafmt")),
+  scalafmtConfig := Some(file(".scalafmt.conf")),
   initialCommands in console :=
     """
       |import com.lambdista.config._
@@ -53,4 +53,3 @@ lazy val typesafe = (project in file("typesafe"))
     moduleName := "config-typesafe",
     libraryDependencies ++= typesafeDeps
   )
-

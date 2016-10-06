@@ -20,7 +20,7 @@ class KeyNotFoundException(name: String) extends RuntimeException(s"No such key:
   * @since 2015-11-27
   */
 class ConversionException(abstractValue: AbstractValue)
-  extends RuntimeException(s"Could not convert ${abstractValue.describe} to the type requested")
+    extends RuntimeException(s"Could not convert ${abstractValue.describe} to the type requested")
 
 /**
   * Exception thrown when the configuration syntax is wrong.

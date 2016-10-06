@@ -14,7 +14,7 @@ import com.lambdista.util.syntax.std.option._
 /**
   * Adapter apt to load Typesafe Config.
   *
-  * @author Alessandro Lacava 
+  * @author Alessandro Lacava
   * @since 2016-01-07
   */
 object typesafe {
@@ -41,12 +41,12 @@ object typesafe {
 
         def convertConfigValue(tsConfigValue: ConfigValue): Try[AbstractValue] = {
           tsConfigValue.valueType match {
-            case ConfigValueType.NULL => Success(AbstractNone)
+            case ConfigValueType.NULL    => Success(AbstractNone)
             case ConfigValueType.BOOLEAN => unwrap[Boolean](tsConfigValue).map(AbstractBool)
-            case ConfigValueType.NUMBER => unwrap[Number](tsConfigValue).map(n => AbstractNumber(n.doubleValue))
-            case ConfigValueType.STRING => unwrap[String](tsConfigValue).map(AbstractString)
-            case ConfigValueType.OBJECT => convertConfigObject(tsConfigValue)
-            case ConfigValueType.LIST => convertConfigList(tsConfigValue.asInstanceOf[ConfigList])
+            case ConfigValueType.NUMBER  => unwrap[Number](tsConfigValue).map(n => AbstractNumber(n.doubleValue))
+            case ConfigValueType.STRING  => unwrap[String](tsConfigValue).map(AbstractString)
+            case ConfigValueType.OBJECT  => convertConfigObject(tsConfigValue)
+            case ConfigValueType.LIST    => convertConfigList(tsConfigValue.asInstanceOf[ConfigList])
 
             case _ => Failure(new TypesafeConversionException(s"Could not convert $tsConfigValue to a ConfigValue"))
           }
@@ -57,10 +57,11 @@ object typesafe {
           def go(acc: Map[String, AbstractValue], tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
             tsConfigEntries match {
               case Nil => Success(AbstractMap(acc))
-              case (k, v) :: es => convertConfigValue(v) match {
-                case Failure(err) => Failure(err)
-                case Success(cv) => go(acc + (k -> cv), es)
-              }
+              case (k, v) :: es =>
+                convertConfigValue(v) match {
+                  case Failure(err) => Failure(err)
+                  case Success(cv)  => go(acc + (k -> cv), es)
+                }
             }
           }
 
@@ -68,7 +69,7 @@ object typesafe {
         }
 
         val tsConfigEntries: List[(String, ConfigValue)] = tsConfig.entrySet.toList.map { entry =>
-          val key = entry.getKey
+          val key   = entry.getKey
           val value = entry.getValue
 
           if (key.indexOf('.') == -1) {

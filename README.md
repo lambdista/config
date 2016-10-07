@@ -56,15 +56,9 @@ Ok, let's see the typical usage scenarios. As a use case consider the following 
 }
 ```
 
-Suppose the previous configuration is at the relative path will be: `core/src/test/resources/foo.conf`.
+Suppose the previous configuration is at the relative path: `core/src/test/resources/foo.conf`.
 
-You can move around a config choosing one of two approaches: *functional* and *imperative*.
-In the following examples you'll see both.
-
-### Functional Approach
-It consists in moving aroung the config through `map` and `flatMap` of the `Try` type, or, analogously, through
-the `for expression`. Here are some examples.
-
+### Quick Start
 First thing first, load and parse your config:
 
 ```scala
@@ -92,16 +86,23 @@ Once you have a `Config` object you can do two main things with it:
 * Retrieve a single value and convert it to whatever it's convertible to.
 
 #### Conversion to a case class
-Here's how you would map the `foo.conf` file to a case class:
+Here's how you would map the previous configuration to a case class (`config` is the value from the previous example):
 
 ```scala
 case class Greek(alpha: String, beta: Int)
 
-case class FooConfig(bar: String, baz: Option[Int], list: List[Int], mapList: List[Greek], range: Range, duration: Duration)
+case class FooConfig(
+    bar: String, 
+    baz: Option[Int], 
+    list: List[Int], 
+    mapList: List[Greek], 
+    range: Range, 
+    duration: Duration
+)
 
 val fooConfig: Try[FooConfig] = for {
   conf <- config
-  result <- conf.tryAs[FooConfig]
+  result <- conf.as[FooConfig]
 } yield result
 ```
 
@@ -126,7 +127,7 @@ Instead of using a case class you may want to retrieve the single values and con
 ```scala
 val bar: Try[String] = for {
   conf <- config
-  result <- conf.tryGet[String]("bar")
+  result <- conf.getAs[String]("bar")
 } yield result
 ```
 
@@ -153,7 +154,7 @@ Once loaded you could retrieve the `bar` value as follows:
 
 val bar: Try[Int] = for {
   c <- config
-  bar <- c.tryGet[Int]("foo.bar")
+  bar <- c.getAs[Int]("foo.bar")
 } yield bar
 ```
 
@@ -163,7 +164,7 @@ the JSON-superset syntax:
 ```scala
 val greekList: Try[List[Greek]] = for {
   conf <- config
-  result <- conf.tryGet[List[Greek]]("mapList")
+  result <- conf.getAs[List[Greek]]("mapList")
 } yield result
 ```
 
@@ -178,7 +179,7 @@ Sorry? You said you would have preferred a `Vector[Greek]` in place of `List[Gre
 ```scala
 val greekVector: Try[Vector[Greek]] = for {
   conf <- config
-  result <- conf.tryGet[Vector[Greek]]("mapList")
+  result <- conf.getAs[Vector[Greek]]("mapList")
 } yield result
 ```
 
@@ -193,7 +194,7 @@ Oh, yes, `Set[Greek]` would have worked too:
 ```scala
 val greekSet: Try[Set[Greek]] = for {
   conf <- config
-  result <- conf.tryGet[Set[Greek]]("mapList")
+  result <- conf.getAs[Set[Greek]]("mapList")
 } yield result
 ```
 
@@ -208,17 +209,17 @@ Analogously you can automatically convert a `Range` into a `List`, `Vector` or `
 ```scala
 val rangeAsList: Try[List[Int]] = for {
   conf <- config
-  result <- conf.tryGet[List[Int]]("range")
+  result <- conf.getAs[List[Int]]("range")
 } yield result
 
 val rangeAsVector: Try[Vector[Int]] = for {
   conf <- config
-  result <- conf.tryGet[Vector[Int]]("range")
+  result <- conf.getAs[Vector[Int]]("range")
 } yield result
 
 val rangeAsSet: Try[Set[Int]] = for {
   conf <- config
-  result <- conf.tryGet[Set[Int]]("range")
+  result <- conf.getAs[Set[Int]]("range")
 } yield result
 ```
 
@@ -233,27 +234,6 @@ Success(Set(4, 2, 8, 6, 10)) // rangeAsSet
 ```
 
 Notice, however, that in case of `Set` the order is not guaranteed because of the very nature of sets.
-
-### Imperative Approach
-If you feel *confident* and prefer not to move within a `Try` you can opt for the *imperative* fashion. In this case, 
-if the config element is not found or cannot be converted into the desired type an exception is thrown.
-Here's an example:
-
-```scala
-val config: Config = Config.from(Paths.get(confPath)).get // calling .get you "get out" of the Try type
-
-val fooConfig: FooConfig = config.as[FooConfig] // conversion to a case class...
-
-// ...or just retrieve the config elements one by one as in the following cases
-val bar: String = config.get[String]("bar")
-val range: Range = config.get[Range]("range")
-```
-
-Of course you could also retrieve optional values from config and fall back on defaults in case they're missing:
-
-```scala
-val age: Int = config.tryGet[Int]("age").getOrElse(42) // result -> 42
-```
 
 <a name="configLoaders"></a>
 ### Config Loaders
@@ -285,19 +265,25 @@ two other features of the library: how it deals with `null` values and its abili
 ```scala
 val confStr: String = "{age = null, charRange = 'a' to 'z'}"
     
-val config: Config = Config.from(confStr).get
+val config: Try[Config] = Config.from(confStr)
 
-val age: Option[Int] = config.get[Option[Int]]("age")
+val age: Try[Option[Int]] = for {
+  conf <- config
+  result <- conf.getAs[Option[Int]]("age")
+} yield result
 
-val charRange: List[Char] = config.get[List[Char]]("charRange")
+val age: Try[List[Char]] = for {
+  conf <- config
+  result <- conf.getAs[List[Char]]("charRange")
+} yield result
 ```
 
 As you may expect the values of `age` and `charRange` will be:
 
 ```scala
-None // age
+Success(None) // age
 
-List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z) // charRange
+Success(List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)) // charRange
 ```
 
 <a name="typesafeConfig"></a>
@@ -349,28 +335,21 @@ val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
 val configTry: Try[Config] = Config.from(tsConfig)
 
-val typesafeConfigTry: Try[TypesafeConfig] = config.flatMap(_.tryAs[TypesafeConfig])
-
-// or, using the "imperative" way, outside the Try
-val config: Config = Config.from(tsConfig).get
-
-val typesafeConfig: TypesafeConfig = config.as[TypesafeConfig]
+val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.tryAs[TypesafeConfig])
 ```
 
-The value of `typesafeConfig` and `typesafeConfigTry` will be:
+The value of `typesafeConfig` will be:
 
 ```scala
-TypesafeConfig(hello,42,1.414,true,List(1, 2, 3),List(Person(John,Doe), Person(Jane,Doe))) // typesafeConfig
-
-Success(TypesafeConfig(hello,42,1.414,true,List(1, 2, 3),List(Person(John,Doe), Person(Jane,Doe)))) // typesafeConfigTry
+Success(TypesafeConfig(hello,42,1.414,true,List(1, 2, 3),List(Person(John,Doe), Person(Jane,Doe))))
 ```
 
 ### Merging two configurations
-You can also merge two configurations using the `softMerge` or `hardMerge` methods of `Config`, 
-as in `config.softMerge(thatConfig)` or `config.hardMerge(thatConfig)`. The behaviour of the
+You can also merge two configurations using either the `recursivelyMerge` or `merge` method of `Config`, 
+as in `config.recursivelyMerge(thatConfig)` or `config.merge(thatConfig)`. The behaviour of the
 former is that, given a key, if the correspondent value is a map then `thatConfig`'s value is
-*softly* merged to this config's value otherwise `thatConfig`'s value replaces this config's value. An example should
-clarify it:
+*recursively* merged to this config's value otherwise `thatConfig`'s value replaces this config's value. 
+An example should clarify the difference between the two approaches:
 
 ```scala
 val confStr1 = """
@@ -394,13 +373,16 @@ val confStr2 = """
 }
 """
 
-val config1: Config = Config.from(confStr1).get
+val config1: Try[Config] = Config.from(confStr1)
 
-val config2: Config = Config.from(confStr2).get
+val config2: Try[Config] = Config.from(confStr2)
 
-val mergedConfig: Config = config1.softMerge(config2)
+val mergedConfig: Try[Config] = for {
+  conf1 <- config1
+  conf2 <- config2
+} yield conf1.recursivelyMerge(conf2)
+
 ```
-
 `mergedConfig` will represent a config such as the following:
 ```
 {
@@ -413,11 +395,10 @@ val mergedConfig: Config = config1.softMerge(config2)
   zoo = "hi"
 }
 ```
-
 As you can see the value of `config2`'s `foo` did not replace entirely the value of `config1`'s `foo`, but they
-were *softly* merged.
+were recursively merged.
 
-On the other hand `hardMerge`'s behaviour is more like Scala's default behaviour when using `++` between two `Map`s and
+On the other hand `merge`'s behaviour is more like Scala's default behaviour when using `++` between two `Map`s. Indeed,
 `config2`'s values replace entirely `config1`'s values with the same key. E.g.:
 ```scala
 val confStr1 = """
@@ -441,11 +422,14 @@ val confStr2 = """
 }
 """
 
-val config1: Config = Config.from(confStr1).get
+val config1: Try[Config] = Config.from(confStr1)
 
-val config2: Config = Config.from(confStr2).get
+val config2: Try[Config] = Config.from(confStr2)
 
-val mergedConfig: Config = config1.softMerge(config2)
+val mergedConfig: Try[Config] = for {
+  conf1 <- config1
+  conf2 <- config2
+} yield conf1.merge(conf2)
 ``` 
 
 `mergedConfig` will represent a config such as the following:

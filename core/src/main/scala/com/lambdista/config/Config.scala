@@ -55,7 +55,7 @@ case class Config(abstractMap: AbstractMap) {
 
   /**
     * Merges two `Config` objects. Given a key, if the correspondent value is a map then `thatConfig`'s value is
-    * "softly" merged to this config's value otherwise `thatConfig`'s value replaces this config's value. E.g.:
+    * "recursively merged to this config's value otherwise `thatConfig`'s value replaces this config's value. E.g.:
     * {{{
     *   conf1:
     *   {
@@ -91,7 +91,7 @@ case class Config(abstractMap: AbstractMap) {
     * @param thatConfig the `Config` to merge this `Config` with
     * @return
     */
-  def softMerge(thatConfig: Config): Config = {
+  def recursivelyMerge(thatConfig: Config): Config = {
     Config(mergeAbstractMaps(this.abstractMap, thatConfig.abstractMap))
   }
 
@@ -132,7 +132,7 @@ case class Config(abstractMap: AbstractMap) {
     * @param thatConfig the `Config` to merge this `Config` with
     * @return
     */
-  def hardMerge(thatConfig: Config): Config = {
+  def merge(thatConfig: Config): Config = {
     Config(AbstractMap(this.abstractMap.value ++ thatConfig.abstractMap.value))
   }
 

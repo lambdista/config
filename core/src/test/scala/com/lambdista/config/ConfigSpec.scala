@@ -229,7 +229,7 @@ class ConfigSpec extends UnitSpec {
     val config: Try[Config] = for {
       c1 <- config1
       c2 <- config2
-    } yield c1.softMerge(c2)
+    } yield c1.recursivelyMerge(c2)
 
     val person: Try[SoftMerge] = for {
       c <- config
@@ -272,7 +272,7 @@ class ConfigSpec extends UnitSpec {
     val config: Try[Config] = for {
       c1 <- config1
       c2 <- config2
-    } yield c1.softMerge(c2)
+    } yield c1.recursivelyMerge(c2)
 
     val person: Try[HardMerge] = for {
       c <- config

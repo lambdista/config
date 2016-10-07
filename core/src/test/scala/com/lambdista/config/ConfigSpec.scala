@@ -29,17 +29,19 @@ class ConfigSpec extends UnitSpec {
   def convertTo[A: ConcreteValue](key: String) =
     for {
       c <- config
-      a <- c.tryGet[A](key)
+      a <- c.getAs[A](key)
     } yield a
 
   case class Greek(alpha: String, beta: Int)
 
-  case class FooConfig(bar: String,
-                       baz: Option[Int],
-                       list: List[Int],
-                       mapList: List[Greek],
-                       range: Range,
-                       duration: Duration)
+  case class FooConfig(
+      bar: String,
+      baz: Option[Int],
+      list: List[Int],
+      mapList: List[Greek],
+      range: Range,
+      duration: Duration
+  )
 
   case class SoftFoo(alpha: Int, baz: Int, bar: String)
   case class SoftMerge(foo: SoftFoo, baz: Int, zoo: String)
@@ -56,22 +58,22 @@ class ConfigSpec extends UnitSpec {
   it should "encode its values correctly" in {
     val string: Try[String] = for {
       c <- configFromStr
-      v <- c.tryGet[String]("string")
+      v <- c.getAs[String]("string")
     } yield v
 
     val duration: Try[Duration] = for {
       c <- configFromStr
-      v <- c.tryGet[Duration]("duration")
+      v <- c.getAs[Duration]("duration")
     } yield v
 
     val charRange: Try[Vector[Char]] = for {
       c <- configFromStr
-      v <- c.tryGet[Vector[Char]]("charRange")
+      v <- c.getAs[Vector[Char]]("charRange")
     } yield v
 
     val opt: Try[Option[Int]] = for {
       c <- configFromStr
-      v <- c.tryGet[Option[Int]]("opt")
+      v <- c.getAs[Option[Int]]("opt")
     } yield v
 
     assert(areSuccesses(string, duration, charRange, opt))
@@ -101,7 +103,7 @@ class ConfigSpec extends UnitSpec {
     // been None. Furthermore, conversions from Range to List or Vector or Set and List to Vector or Set happens automatically
     val fooConfig: Try[FooConfig] = for {
       c <- config
-      a <- c.tryAs[FooConfig]
+      a <- c.as[FooConfig]
     } yield a
 
     assert(fooConfig.isSuccess)
@@ -114,13 +116,13 @@ class ConfigSpec extends UnitSpec {
     val fooConfig: Try[FooConfig] = for {
       c <- config
       // first convert the Config into a ConfigMap...
-      map <- c.tryAs[AbstractMap]
+      map <- c.as[AbstractMap]
       // ...then transform ConfigMap keys to match the case class field names
       newMap = map.transformKeys {
         case "range foo" => "range"
       }
       // Note how a given ConfigMap can be converted intto a case class too
-      fooConf <- newMap.tryAs[FooConfig]
+      fooConf <- newMap.as[FooConfig]
     } yield fooConf
 
     assert(fooConfig.isSuccess)
@@ -129,7 +131,7 @@ class ConfigSpec extends UnitSpec {
   "A config" should "allow conversions into a case class also for any of its elements" in {
     val greeks: Try[List[Greek]] = for {
       c <- config
-      a <- c.tryGet[List[Greek]]("mapList")
+      a <- c.getAs[List[Greek]]("mapList")
     } yield a
 
     assert(greeks.isSuccess)
@@ -179,7 +181,7 @@ class ConfigSpec extends UnitSpec {
         failover: Failover
     )
 
-    val result: Try[ConnOptions] = config.flatMap(_.tryAs[ConnOptions])
+    val result: Try[ConnOptions] = config.flatMap(_.as[ConnOptions])
 
     assert(areSuccesses(result))
   }
@@ -190,7 +192,7 @@ class ConfigSpec extends UnitSpec {
 
     val mapList: Try[Map[String, Int]] = for {
       c <- config
-      m <- c.tryGet[Map[String, Int]]("map")
+      m <- c.getAs[Map[String, Int]]("map")
     } yield m
 
     assert(mapList.isSuccess)
@@ -231,7 +233,7 @@ class ConfigSpec extends UnitSpec {
 
     val person: Try[SoftMerge] = for {
       c <- config
-      p <- c.tryAs[SoftMerge]
+      p <- c.as[SoftMerge]
     } yield p
 
     val expectedResult = SoftMerge(SoftFoo(alpha = 1, baz = 15, bar = "goodbye"), baz = 1, zoo = "hi")
@@ -274,7 +276,7 @@ class ConfigSpec extends UnitSpec {
 
     val person: Try[HardMerge] = for {
       c <- config
-      p <- c.tryAs[HardMerge]
+      p <- c.as[HardMerge]
     } yield p
 
     val expectedResult = HardMerge(HardFoo(baz = 15, bar = "goodbye"), baz = 1, zoo = "hi")
@@ -293,7 +295,7 @@ class ConfigSpec extends UnitSpec {
 
     val bar: Try[Int] = for {
       c   <- config
-      bar <- c.tryGet[Int]("foo.bar")
+      bar <- c.getAs[Int]("foo.bar")
     } yield bar
 
     bar should matchPattern { case Success(42) => }
@@ -310,7 +312,7 @@ class ConfigSpec extends UnitSpec {
 
     val foo: Try[String] = for {
       c <- config
-      f <- c.tryGet[String]("foo")
+      f <- c.getAs[String]("foo")
     } yield f
 
     foo should matchPattern { case Success("\\\"hello world\\\"") => }
@@ -333,7 +335,7 @@ class ConfigSpec extends UnitSpec {
 
     val config: Try[Config] = Config.from(confStr)
 
-    val string: Try[String] = config.flatMap(_.tryGet[String]("int"))
+    val string: Try[String] = config.flatMap(_.getAs[String]("int"))
 
     assert(string.isFailure)
 
@@ -347,7 +349,7 @@ class ConfigSpec extends UnitSpec {
 
     val config: Try[Config] = Config.from(confStr)
 
-    val int: Try[Int] = config.flatMap(_.tryGet[Int]("nonexistentKey"))
+    val int: Try[Int] = config.flatMap(_.getAs[Int]("nonexistentKey"))
 
     assert(int.isFailure)
 

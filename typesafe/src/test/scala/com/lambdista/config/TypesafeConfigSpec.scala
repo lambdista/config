@@ -34,7 +34,7 @@ class TypesafeConfigSpec extends UnitSpec {
 
     val config: Try[Config] = Config.from(tsConfig)
 
-    val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.tryAs[TypesafeConfig])
+    val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
 
     assert(typesafeConfig.isSuccess)
   }

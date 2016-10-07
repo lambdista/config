@@ -2,17 +2,19 @@
 
 ## Not only another Typesafe's config wrapper
 Right from the start I didn't want to depend on other config libraries when I started implementing this one so I wrote
-my own parser for a simple JSON-like syntax.
-Hence, this is not just another [Typesafe's config](https://github.com/typesafehub/config) wrapper. Of course,
-if you are already using Typesafe's config library and/or just
-prefer [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) syntax for your configuration,
+my own parser for a simple *JSONish* syntax. One of the advantages in using your own parser is you can add other custom
+types. For example this lib allows you to define a 
+Scala [Range](http://www.scala-lang.org/api/current/index.html#scala.collection.immutable.Range) while 
+[HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) doesn't let you do it.
+Hence, this is not only another [Typesafe's config](https://github.com/typesafehub/config) wrapper. However,
+if you are already using Typesafe's config library and/or just prefer HOCON syntax for your configuration,
 there's an adapter that will convert a Typesafe `Config` object into this config's AST.
 See [this example](#typesafeConfig).
 
 ## Configuration Syntax
 The syntax expected by this library is a JSON-superset. This means that any JSON file
 should be a valid configuration. However, the `null` JSON values can only be converted to `Option[A]`, where `A` 
-is the type you expect, because, of course, we don't fancy `null` in Scala code. The *superset* part means that:
+is the type you expect because, of course, we don't fancy `null` in Scala code. The *superset* part means that:
   
 * You can optionally use `=` instead of `:`
 * You can avoid putting the keys between quotes, unless your key contains white spaces

@@ -6,8 +6,9 @@ import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-import com.typesafe.config.{Config => TSConfig, ConfigList, ConfigObject, ConfigValue, ConfigValueType}
+import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueType, Config => TSConfig}
 
+import com.lambdista.config.exception.TypesafeConversionException
 import com.lambdista.util.sequence
 import com.lambdista.util.syntax.std.option._
 

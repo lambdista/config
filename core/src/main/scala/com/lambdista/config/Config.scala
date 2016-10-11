@@ -3,6 +3,7 @@ package config
 
 import scala.util.{Failure, Try}
 
+import com.lambdista.config.exception.{ConversionException, KeyNotFoundException}
 import com.lambdista.util.syntax.std.option._
 
 /**

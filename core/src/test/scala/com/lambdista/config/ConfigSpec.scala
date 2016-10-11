@@ -7,6 +7,8 @@ import java.nio.file.Paths
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
+import com.lambdista.config.exception.{ConfigSyntaxException, ConversionException, KeyNotFoundException}
+
 /**
   * Unit Test for Config.
   *

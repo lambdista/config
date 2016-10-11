@@ -1,5 +1,6 @@
 package com.lambdista
 package config
+package exception
 
 /**
   * Exception representing a failure while trying to convert from Typesafe's config to this config's AST.

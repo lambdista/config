@@ -4,6 +4,7 @@ package config
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
+import com.lambdista.config.exception.ConversionException
 import com.lambdista.util.syntax.std.option._
 
 /**

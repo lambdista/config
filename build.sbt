@@ -1,6 +1,7 @@
 import Dependencies._
 import com.typesafe.sbt.SbtGhPages.GhPagesKeys._
 import com.typesafe.sbt.SbtSite.SiteKeys._
+import UnidocKeys._
 
 lazy val projectName = "config"
 
@@ -44,8 +45,8 @@ lazy val noPublishSettings = Seq(
 )
 
 lazy val config = (project in file("."))
-  .aggregate(core, typesafe)
-  .dependsOn(core, typesafe)
+  .aggregate(core, util, typesafe)
+  .dependsOn(core, util, typesafe)
   .settings(commonSettings)
   .settings(noPublishSettings)
   .settings(
@@ -55,12 +56,20 @@ lazy val config = (project in file("."))
   )
 
 lazy val core = (project in file("core"))
+  .dependsOn(util)
   .settings(commonSettings)
   .settings(Publishing.settings)
   .settings(
     moduleName := projectName,
     libraryDependencies ++= coreDeps,
     dependencyOverrides += shapeless
+  )
+
+lazy val util = (project in file("util"))
+  .settings(commonSettings)
+  .settings(noPublishSettings)
+  .settings(
+    moduleName := "config-util"
   )
 
 lazy val typesafe = (project in file("typesafe"))
@@ -76,10 +85,11 @@ lazy val docSettings = tutSettings ++ site.settings ++ ghpages.settings ++ unido
     site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "api"),
     ghpagesNoJekyll := false,
     git.remoteRepo := "https://github.com/lambdista/config",
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(util),
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.svg" | "*.js" | "*.swf" | "*.yml" | "*.md"
   )
 
-lazy val docs = project
+lazy val docs = (project in file("docs"))
   .dependsOn(core, typesafe)
   .settings(commonSettings)
   .settings(noPublishSettings)

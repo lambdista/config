@@ -142,7 +142,7 @@ Success("hello")
 
 You can also use the *dot* syntax to retrieve a value. E.g.:
 
-``` tut:silent
+```scala
 val cfgStr = """
 {
   foo = {

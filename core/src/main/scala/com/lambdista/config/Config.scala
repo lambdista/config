@@ -16,9 +16,9 @@ case class Config(abstractMap: AbstractMap) {
 
   /**
     * Tries to convert the configuration to a type for which exists an instance of
-    * `ConcreteValue` in scope. Since the configuration is represented as a `ConfigMap`, `A` is generally a case class or,
-    * simply, `ConfigMap`. The conversion to a case class happens automatically, you don't need to implement a
-    * `ConcreteValue` instance for it. The only requirement is that the configuration keys and values match the case
+    * [[ConcreteValue]] in scope. Since the configuration is represented as a [[AbstractMap]], `A` is generally a case class or,
+    * simply, [[AbstractMap]]. The conversion to a case class happens automatically, you don't need to implement a
+    * [[ConcreteValue]] instance for it. The only requirement is that the configuration keys and values match the case
     * class's field names and values, respectively. For example, given a config object pointing to this configuration:
     * {{{
     * {
@@ -34,7 +34,7 @@ case class Config(abstractMap: AbstractMap) {
     * {{{
     * config.as[Foo] // result Success(Foo(42, "hello"))
     * }}}
-    * @return a `Try[A]`, which is a Success if the conversion is successful, a Failure if it's not.
+    * @return a `Try[A]`, which is a `Success` if the conversion is successful, a `Failure` if it's not.
     */
   def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(abstractMap).toTry(new ConversionException(abstractMap))
 
@@ -54,7 +54,7 @@ case class Config(abstractMap: AbstractMap) {
   }
 
   /**
-    * Merges two `Config` objects. Given a key, if the correspondent value is a map then `thatConfig`'s value is
+    * Merges two [[Config]] objects. Given a key, if the correspondent value is a map then `thatConfig`'s value is
     * "recursively merged to this config's value otherwise `thatConfig`'s value replaces this config's value. E.g.:
     * {{{
     *   conf1:
@@ -88,7 +88,7 @@ case class Config(abstractMap: AbstractMap) {
       }
     * }}}
     *
-    * @param thatConfig the `Config` to merge this `Config` with
+    * @param thatConfig the [[Config]] to merge this [[Config]] with
     * @return
     */
   def recursivelyMerge(thatConfig: Config): Config = {
@@ -96,7 +96,7 @@ case class Config(abstractMap: AbstractMap) {
   }
 
   /**
-    * Merges two `Config` objects. Basically if you look at the configuration as `Map`s, the resulting `Config` object
+    * Merges two [[Config]] objects. Basically if you look at the configuration as `Map`s, the resulting [[Config]] object
     * is like using `++` with the two underlying `Map`s, as in thisConfig ++ thatConfig. E.g.:
     * {{{
     *   conf1:
@@ -129,7 +129,7 @@ case class Config(abstractMap: AbstractMap) {
       }
     * }}}
     *
-    * @param thatConfig the `Config` to merge this `Config` with
+    * @param thatConfig the [[Config]] to merge this [[Config]] with
     * @return
     */
   def merge(thatConfig: Config): Config = {
@@ -186,7 +186,7 @@ object Config {
   val empty: Config = Config(AbstractMap(Map.empty[String, AbstractValue]))
 
   /**
-    * Loads a configuration using the `ConfigLoader[R]` in scope, where `R` is the resource representing
+    * Loads a configuration using the [[ConfigLoader]][R] in scope, where `R` is the resource representing
     * the configuration.
     *
     * @param resource the resource representing the configuration

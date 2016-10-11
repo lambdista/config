@@ -37,15 +37,17 @@ lazy val commonSettings = Seq(
 
 lazy val config = (project in file("."))
   .aggregate(core, typesafe)
-  .dependsOn(core)
+  .dependsOn(core, typesafe)
   .settings(commonSettings: _*)
+  .settings(tutSettings)
   .settings(
     moduleName := "config-root",
     (unmanagedSourceDirectories in Compile) := Nil,
     (unmanagedSourceDirectories in Test) := Nil,
     publish := (),
     publishLocal := (),
-    publishArtifact := false
+    publishArtifact := false,
+    tutTargetDirectory := file(".")
   )
 
 lazy val core = (project in file("core"))

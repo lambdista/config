@@ -11,7 +11,7 @@ import shapeless.{:: => :*:, _}
 import com.lambdista.util._
 
 /**
-  * Type class used to convert an `AbstractValue` into a concrete Scala value.
+  * Type class used to convert an [[AbstractValue]] into a concrete Scala value.
   *
   * @author Alessandro Lacava
   * @since 2015-11-27

@@ -52,7 +52,7 @@ object typesafe {
           }
         }
 
-        def tsConfigEntriesAsConfigMap(tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
+        def tsConfigEntriesAsAbstractMap(tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
           @tailrec
           def go(acc: Map[String, AbstractValue], tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
             tsConfigEntries match {
@@ -80,7 +80,7 @@ object typesafe {
           }
         }
 
-        tsConfigEntriesAsConfigMap(tsConfigEntries)
+        tsConfigEntriesAsAbstractMap(tsConfigEntries)
       }
 
       convertTypesafeConfig(resource).map(cm => Config(cm))

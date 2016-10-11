@@ -115,13 +115,13 @@ class ConfigSpec extends UnitSpec {
 
     val fooConfig: Try[FooConfig] = for {
       c <- config
-      // first convert the Config into a ConfigMap...
+      // first convert the Config into a AbstractMap...
       map <- c.as[AbstractMap]
-      // ...then transform ConfigMap keys to match the case class field names
+      // ...then transform AbstractMap keys to match the case class field names
       newMap = map.transformKeys {
         case "range foo" => "range"
       }
-      // Note how a given ConfigMap can be converted intto a case class too
+      // Note how a given AbstractMap can be converted intto a case class too
       fooConf <- newMap.as[FooConfig]
     } yield fooConf
 

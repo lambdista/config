@@ -57,10 +57,10 @@ class TypesafeConfigSpec extends UnitSpec {
 
     val configuration: Try[Configuration] = for {
       conf <- Config.from(tsConfig)
-      version <- conf.tryGet[String]("version")
-      wss <- conf.tryGet[List[Ws]]("wss")
-      home <- conf.tryGet[String]("home")
-      db <- conf.tryGet[Option[Db]]("db")
+      version <- conf.getAs[String]("version")
+      wss <- conf.getAs[List[Ws]]("wss")
+      home <- conf.getAs[String]("home")
+      db <- conf.getAs[Option[Db]]("db")
     } yield Configuration(version, wss, home, db)
 
     assert(configuration.isSuccess)

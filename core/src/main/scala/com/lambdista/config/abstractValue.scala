@@ -14,17 +14,17 @@ import com.lambdista.util.syntax.std.option._
   */
 sealed trait AbstractValue {
   /**
-    * Tries to convert this `AbstractValue` into an `A`, provided that there's an implicit
-    * implementation of `ConcreteValue[A]` in scope.
+    * Tries to convert this [[AbstractValue]] into an `A`, provided that there's an implicit
+    * implementation of [[ConcreteValue]][A] in scope.
     *
     * @return a `Try[A]`
     */
   def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(this).toTry(new ConversionException(this))
 
   /**
-    * Description of this `AbstractValue`.
+    * Description of this [[AbstractValue]].
     *
-    * @return a `String` representing a description for this `AbstractValue`
+    * @return a `String` representing a description for this [[AbstractValue]]
     */
   def describe: String
 }

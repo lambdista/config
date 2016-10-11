@@ -62,13 +62,23 @@ Suppose the previous configuration is at the relative path: `core/src/test/resou
 First thing first, load and parse your config:
 
 ```scala
+scala> import scala.util.Try
 import scala.util.Try
 
+scala> import scala.concurrent.duration.Duration
+import scala.concurrent.duration.Duration
+
+scala> import java.nio.file.Paths
 import java.nio.file.Paths
 
-val confPath = "core/src/test/resources/foo.conf"
+scala> import com.lambdista.config._
+import com.lambdista.config._
 
-val config: Try[Config] = Config.from(Paths.get(confPath))
+scala> val confPath = "core/src/test/resources/foo.conf"
+confPath: String = core/src/test/resources/foo.conf
+
+scala> val config: Try[Config] = Config.from(Paths.get(confPath))
+config: scala.util.Try[com.lambdista.config.Config] = Success(Config(AbstractMap(Map(duration -> AbstractDuration(5 seconds), range -> AbstractRange(Range(2, 4, 6, 8, 10)), bar -> AbstractString(hello), mapList -> AbstractList(List(AbstractMap(Map(alpha -> AbstractString(hello), beta -> AbstractNumber(42.0))), AbstractMap(Map(alpha -> AbstractString(world), beta -> AbstractNumber(24.0))))), baz -> AbstractNumber(42.0), list -> AbstractList(List(AbstractNumber(1.0), AbstractNumber(2.0), AbstractNumber(3.0)))))))
 ```
 
 Apart from `java.nio.file.Path` you can load your config from other resources using [Config Loaders](#configLoaders).
@@ -137,26 +147,26 @@ The value of `bar` will be:
 Success("hello")
 ```
 
-You can also use the *dot* syntax to retrieve a value. For example suppose you have the following configuration:
+You can also use the *dot* syntax to retrieve a value. E.g.:
 
-```
+``` tut:silent
+val cfgStr = """
 {
   foo = {
     bar = 42
   }
 }
-```
+"""
 
-Once loaded you could retrieve the `bar` value as follows:
-
-```scala
-// val config: Try[Config] = ...
+val config: Try[Config] = Config.from(cfgStr)
 
 val bar: Try[Int] = for {
   c <- config
   bar <- c.getAs[Int]("foo.bar")
 } yield bar
 ```
+
+Note how the `bar` value was retrieved using the dot syntax.
 
 Apart from converting the whole config into a case class, you can also convert a given value provided it's an object in
 the JSON-superset syntax:
@@ -335,7 +345,7 @@ val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
 val configTry: Try[Config] = Config.from(tsConfig)
 
-val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.tryAs[TypesafeConfig])
+val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
 ```
 
 The value of `typesafeConfig` will be:

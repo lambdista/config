@@ -61,7 +61,7 @@ Suppose the previous configuration is at the relative path: `core/src/test/resou
 ### Quick Start
 First thing first, load and parse your config:
 
-```tut
+```tut:silent
 import scala.util.Try
 import scala.concurrent.duration.Duration
 

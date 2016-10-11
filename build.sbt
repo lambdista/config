@@ -1,4 +1,6 @@
 import Dependencies._
+import com.typesafe.sbt.SbtGhPages.GhPagesKeys._
+import com.typesafe.sbt.SbtSite.SiteKeys._
 
 lazy val projectName = "config"
 
@@ -35,23 +37,26 @@ lazy val commonSettings = Seq(
     """.stripMargin
 )
 
+lazy val noPublishSettings = Seq(
+  publish := (),
+  publishLocal := (),
+  publishArtifact := false
+)
+
 lazy val config = (project in file("."))
   .aggregate(core, typesafe)
   .dependsOn(core, typesafe)
-  .settings(commonSettings: _*)
-  .settings(tutSettings)
+  .settings(commonSettings)
+  .settings(noPublishSettings)
   .settings(
     moduleName := "config-root",
     (unmanagedSourceDirectories in Compile) := Nil,
-    (unmanagedSourceDirectories in Test) := Nil,
-    publish := (),
-    publishLocal := (),
-    publishArtifact := false,
-    tutTargetDirectory := file(".")
+    (unmanagedSourceDirectories in Test) := Nil
   )
 
 lazy val core = (project in file("core"))
-  .settings(commonSettings ++ Publishing.settings: _*)
+  .settings(commonSettings)
+  .settings(Publishing.settings)
   .settings(
     moduleName := projectName,
     libraryDependencies ++= coreDeps,
@@ -60,8 +65,27 @@ lazy val core = (project in file("core"))
 
 lazy val typesafe = (project in file("typesafe"))
   .dependsOn(core)
-  .settings(commonSettings ++ Publishing.settings: _*)
+  .settings(commonSettings)
+  .settings(Publishing.settings)
   .settings(
     moduleName := "config-typesafe",
     libraryDependencies ++= typesafeDeps
+  )
+
+lazy val docSettings = tutSettings ++ site.settings ++ ghpages.settings ++ unidocSettings ++ Seq(
+    site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "api"),
+    ghpagesNoJekyll := false,
+    git.remoteRepo := "https://github.com/lambdista/config",
+    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.svg" | "*.js" | "*.swf" | "*.yml" | "*.md"
+  )
+
+lazy val docs = project
+  .dependsOn(core, typesafe)
+  .settings(commonSettings)
+  .settings(noPublishSettings)
+  .settings(docSettings)
+  .settings(
+    moduleName := "config-docs",
+    tutSourceDirectory := file("docs/src/tut"),
+    tutTargetDirectory := file(".")
   )

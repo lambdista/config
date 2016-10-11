@@ -42,6 +42,7 @@ case class Config(abstractMap: AbstractMap) {
     * Tries to retrieve a config value and convert it into a concrete Scala value. It may fail in one of two ways:
     *
     * 1. The key looked for is not found.
+    *
     * 2. The conversion is not doable.
     *
     * @param key the key to look for
@@ -55,37 +56,41 @@ case class Config(abstractMap: AbstractMap) {
 
   /**
     * Merges two [[Config]] objects. Given a key, if the correspondent value is a map then `thatConfig`'s value is
-    * "recursively merged to this config's value otherwise `thatConfig`'s value replaces this config's value. E.g.:
+    * "recursively" merged to this config's value otherwise `thatConfig`'s value replaces this config's value. E.g.:
+    *
+    * `conf1`:
     * {{{
-    *   conf1:
-    *   {
-    	    foo = {
-    	      alpha = 1,
-    	      bar = "hello"
-    	    },
-    	    baz = 42
-       }
-
-       conf2:
-       {
-  	     foo = {
-  	       baz = 15,
-  	       bar = "goodbye"
-  	     },
-  	     baz = 1,
-  	     zoo = "hi"
-       }
-
-       conf1.softMerge(conf2):
-      {
-        foo = {
-          alpha = 1,
-          baz = 15,
-          bar = "goodbye"
-        },
-        baz = 1,
-        zoo = "hi"
-      }
+    * {
+    *	  foo = {
+    *	    alpha = 1,
+    *	    bar = "hello"
+    *	  },
+    *	  baz = 42
+    * }
+    * }}}
+    *
+    * `conf2`:
+    * {{{
+    * {
+  	*   foo = {
+    *     baz = 15,
+  	*     bar = "goodbye"
+  	*   },
+  	*   baz = 1,
+  	*   zoo = "hi"
+    * }
+    * }}}
+    * `conf1.recursivelyMerge(conf2)`:
+    * {{{
+    * {
+    *   foo = {
+    *     alpha = 1,
+    *     baz = 15,
+    *     bar = "goodbye"
+    *   },
+    *   baz = 1,
+    *   zoo = "hi"
+    * }
     * }}}
     *
     * @param thatConfig the [[Config]] to merge this [[Config]] with
@@ -98,35 +103,39 @@ case class Config(abstractMap: AbstractMap) {
   /**
     * Merges two [[Config]] objects. Basically if you look at the configuration as `Map`s, the resulting [[Config]] object
     * is like using `++` with the two underlying `Map`s, as in thisConfig ++ thatConfig. E.g.:
+    *
+    * `conf1`:
     * {{{
-    *   conf1:
-    *   {
-    	    foo = {
-    	      alpha = 1,
-    	      bar = "hello"
-    	    },
-    	    baz = 42,
-          zoo = "hi"
-       }
-
-       conf2:
-       {
-  	     foo = {
-  	       baz = 15,
-  	       bar = "goodbye"
-  	     },
-  	     baz = 1,
-       }
-
-       conf1.softMerge(conf2):
-      {
-        foo = {
-          baz = 15,
-          bar = "goodbye"
-        },
-        baz = 1,
-        zoo = "hi"
-      }
+    * {
+    *	  foo = {
+    *	    alpha = 1,
+    *	    bar = "hello"
+    *	  },
+    *	  baz = 42
+    * }
+    * }}}
+    *
+    * `conf2`:
+    * {{{
+    * {
+  	*   foo = {
+    *     baz = 15,
+  	*     bar = "goodbye"
+  	*   },
+  	*   baz = 1,
+  	*   zoo = "hi"
+    * }
+    * }}}
+    * `conf1.merge(conf2)`:
+    * {{{
+    * {
+    *   foo = {
+    *     baz = 15,
+  	*     bar = "goodbye"
+    *   },
+    *   baz = 1,
+    *   zoo = "hi"
+    * }
     * }}}
     *
     * @param thatConfig the [[Config]] to merge this [[Config]] with

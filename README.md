@@ -456,6 +456,9 @@ val mergedConfig: Try[Config] = for {
 
 Look at the tests for this library to see the examples in practise.
 
+## Scaladoc API
+[Scaladoc API](https://lambdista.github.io/config/api/)
+
 ## Bugs and Feedback
 For bugs, questions and discussions please use [Github Issues](https://github.com/lambdista/config/issues).
 

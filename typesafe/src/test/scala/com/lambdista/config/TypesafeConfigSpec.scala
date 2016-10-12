@@ -43,25 +43,16 @@ class TypesafeConfigSpec extends UnitSpec {
 
   case class Db(name: String, host: String, port: Int, user: String, password: String)
 
-  case class Configuration(version: String, ws: List[Ws], home: String, db: Option[Db])
+  case class Configuration(version: String, wss: List[Ws], home: String, db: Option[Db])
 
   "typesafe2.conf using HOCON syntax used by the Typesafe config library" should "be loaded and converted correctly" in {
     val confPath           = "typesafe/src/test/resources/typesafe2.conf"
     val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
-    // error: diverging implicit expansion!
-//    val configuration: Try[Configuration] = for {
-//      conf <- Config.from(tsConfig)
-//      res <- conf.tryAs[Configuration]
-//    } yield res
-
     val configuration: Try[Configuration] = for {
       conf <- Config.from(tsConfig)
-      version <- conf.getAs[String]("version")
-      wss <- conf.getAs[List[Ws]]("wss")
-      home <- conf.getAs[String]("home")
-      db <- conf.getAs[Option[Db]]("db")
-    } yield Configuration(version, wss, home, db)
+      res <- conf.as[Configuration]
+    } yield res
 
     assert(configuration.isSuccess)
   }

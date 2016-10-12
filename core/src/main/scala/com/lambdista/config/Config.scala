@@ -12,12 +12,12 @@ import com.lambdista.util.syntax.std.option._
   * @author Alessandro Lacava
   * @since 2015-11-27
   */
-case class Config(abstractMap: AbstractMap) {
+final case class Config(abstractMap: AbstractMap) {
   private val values: Map[String, AbstractValue] = abstractMap.value
 
   /**
     * Tries to convert the configuration to a type for which exists an instance of
-    * [[ConcreteValue]] in scope. Since the configuration is represented as a [[AbstractMap]], `A` is generally a case class or,
+    * [[ConcreteValue]] in scope. Since the configuration is represented as a [[AbstractMap]], `A` is generally a final case class or,
     * simply, [[AbstractMap]]. The conversion to a case class happens automatically, you don't need to implement a
     * [[ConcreteValue]] instance for it. The only requirement is that the configuration keys and values match the case
     * class's field names and values, respectively. For example, given a config object pointing to this configuration:
@@ -27,9 +27,9 @@ case class Config(abstractMap: AbstractMap) {
     *   baz: "hello"
     * }
     * }}}
-    * and this case class:
+    * and this final case class:
     * {{{
-    * case class Foo(bar: Int, baz: String)
+    * final case class Foo(bar: Int, baz: String)
     * }}}
     * the conversion is possible as in:
     * {{{

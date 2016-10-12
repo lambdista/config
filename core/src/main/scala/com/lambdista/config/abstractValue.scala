@@ -30,27 +30,27 @@ sealed trait AbstractValue {
   def describe: String
 }
 
-case class AbstractBool(value: Boolean) extends AbstractValue {
+final case class AbstractBool(value: Boolean) extends AbstractValue {
   override def describe: String = value.toString
 }
 
-case class AbstractNumber(value: Double) extends AbstractValue {
+final case class AbstractNumber(value: Double) extends AbstractValue {
   override def describe: String = value.toString
 }
 
-case class AbstractChar(value: Char) extends AbstractValue {
+final case class AbstractChar(value: Char) extends AbstractValue {
   override def describe: String = s"'${value.toString}'"
 }
 
-case class AbstractString(value: String) extends AbstractValue {
+final case class AbstractString(value: String) extends AbstractValue {
   override def describe: String = s""""$value""""
 }
 
-case class AbstractDuration(value: Duration) extends AbstractValue {
+final case class AbstractDuration(value: Duration) extends AbstractValue {
   override def describe: String = value.toString
 }
 
-case class AbstractRange(value: Range) extends AbstractValue {
+final case class AbstractRange(value: Range) extends AbstractValue {
   override def describe: String = AbstractList(value.toList.map(x => AbstractNumber(x.toDouble))).describe
 }
 
@@ -58,14 +58,14 @@ case object AbstractNone extends AbstractValue {
   override def describe: String = "None"
 }
 
-case class AbstractList(values: List[AbstractValue]) extends AbstractValue {
+final case class AbstractList(values: List[AbstractValue]) extends AbstractValue {
   override def describe: String = {
     val s = values.map(_.describe).mkString(", ")
     s"[$s]"
   }
 }
 
-case class AbstractMap(value: Map[String, AbstractValue]) extends AbstractValue {
+final case class AbstractMap(value: Map[String, AbstractValue]) extends AbstractValue {
   override def describe: String = {
     val s = value.map { case (k, v) => s"$k = ${v.describe}" }.mkString(", ")
     s"{$s}"

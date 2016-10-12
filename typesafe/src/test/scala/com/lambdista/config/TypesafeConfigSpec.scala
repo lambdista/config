@@ -7,9 +7,8 @@ import scala.util.Try
 
 import com.typesafe.config.{ConfigFactory, Config => TSConfig}
 
-import com.lambdista.config.typesafe._
-
 // important to bring into scope the ConfigLoader instance for Typesafe's Config
+import com.lambdista.config.typesafe._
 
 /**
   *

@@ -67,7 +67,7 @@ lazy val core = (project in file("core"))
 
 lazy val util = (project in file("util"))
   .settings(commonSettings)
-  .settings(noPublishSettings)
+  .settings(Publishing.settings)
   .settings(
     moduleName := "config-util"
   )

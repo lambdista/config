@@ -73,7 +73,7 @@ lazy val util = (project in file("util"))
   )
 
 lazy val typesafe = (project in file("typesafe"))
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
   .settings(commonSettings)
   .settings(Publishing.settings)
   .settings(

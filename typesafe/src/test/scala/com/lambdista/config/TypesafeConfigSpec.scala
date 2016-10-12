@@ -5,9 +5,11 @@ import java.io.File
 
 import scala.util.Try
 
-import com.typesafe.config.{Config => TSConfig, ConfigFactory}
+import com.typesafe.config.{ConfigFactory, Config => TSConfig}
 
-import com.lambdista.config.typesafe._ // important to bring into scope the ConfigLoader instance for Typesafe's Config
+import com.lambdista.config.typesafe._
+
+// important to bring into scope the ConfigLoader instance for Typesafe's Config
 
 /**
   *
@@ -16,7 +18,6 @@ import com.lambdista.config.typesafe._ // important to bring into scope the Conf
   * @since 2016-01-12
   */
 class TypesafeConfigSpec extends UnitSpec {
-
   case class Person(firstName: String, lastName: String)
 
   case class TypesafeConfig(
@@ -51,7 +52,7 @@ class TypesafeConfigSpec extends UnitSpec {
 
     val configuration: Try[Configuration] = for {
       conf <- Config.from(tsConfig)
-      res <- conf.as[Configuration]
+      res  <- conf.as[Configuration]
     } yield res
 
     assert(configuration.isSuccess)

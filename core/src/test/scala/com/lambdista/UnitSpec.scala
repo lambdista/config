@@ -1,5 +1,4 @@
 package com.lambdista
-package config
 
 import org.scalatest.{FlatSpec, Matchers}
 

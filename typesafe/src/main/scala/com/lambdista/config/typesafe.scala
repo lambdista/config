@@ -6,8 +6,9 @@ import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-import com.typesafe.config.{Config => TSConfig, ConfigList, ConfigObject, ConfigValue, ConfigValueType}
+import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueType, Config => TSConfig}
 
+import com.lambdista.config.exception.TypesafeConversionException
 import com.lambdista.util.sequence
 import com.lambdista.util.syntax.std.option._
 
@@ -52,7 +53,7 @@ object typesafe {
           }
         }
 
-        def tsConfigEntriesAsConfigMap(tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
+        def tsConfigEntriesAsAbstractMap(tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
           @tailrec
           def go(acc: Map[String, AbstractValue], tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
             tsConfigEntries match {
@@ -80,7 +81,7 @@ object typesafe {
           }
         }
 
-        tsConfigEntriesAsConfigMap(tsConfigEntries)
+        tsConfigEntriesAsAbstractMap(tsConfigEntries)
       }
 
       convertTypesafeConfig(resource).map(cm => Config(cm))

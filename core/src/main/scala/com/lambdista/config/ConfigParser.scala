@@ -6,6 +6,8 @@ import scala.util.{Failure, Try}
 
 import org.parboiled2._
 
+import com.lambdista.config.exception.ConfigSyntaxException
+
 /**
   * Configuration parser.
   *

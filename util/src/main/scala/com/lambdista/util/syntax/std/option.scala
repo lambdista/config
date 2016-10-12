@@ -1,7 +1,4 @@
-package com.lambdista
-package util
-package syntax
-package std
+package com.lambdista.util.syntax.std
 
 import scala.util.{Failure, Success, Try}
 

@@ -19,3 +19,4 @@ logs/
 *.iml
 *.iws
 .bumpversion.cfg
+private/

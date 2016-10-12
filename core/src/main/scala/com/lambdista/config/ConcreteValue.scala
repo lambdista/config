@@ -11,7 +11,7 @@ import shapeless.{:: => :*:, _}
 import com.lambdista.util._
 
 /**
-  * Type class used to convert an `AbstractValue` into a concrete Scala value.
+  * Type class used to convert an [[AbstractValue]] into a concrete Scala value.
   *
   * @author Alessandro Lacava
   * @since 2015-11-27
@@ -151,7 +151,7 @@ object ConcreteValue {
     }
 
     new ConcreteValue[Map[String, A]] {
-      def apply(v: AbstractValue) = v.tryAs[AbstractMap].toOption.flatMap { cm =>
+      def apply(v: AbstractValue) = v.as[AbstractMap].toOption.flatMap { cm =>
         traverseMap(cm.value.map { case (key, value) => key -> A.apply(value) })
       }
     }
@@ -162,7 +162,7 @@ object ConcreteValue {
       fromMap: Lazy[FromMap[R]]
   ): ConcreteValue[A] = new ConcreteValue[A] {
     override def apply(abstractValue: AbstractValue): Option[A] =
-      abstractValue.tryAs[AbstractMap].toOption.flatMap(x => fromMap.value(x.value).map(gen.from))
+      abstractValue.as[AbstractMap].toOption.flatMap(x => fromMap.value(x.value).map(gen.from))
   }
 
   trait FromMap[L <: HList] {
@@ -200,7 +200,7 @@ object ConcreteValue {
         def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
           for {
             v <- m.get(witness.value.name)
-            r <- v.tryAs[Map[String, AbstractValue]].toOption
+            r <- v.as[Map[String, AbstractValue]].toOption
             h <- fromMapH.value(r)
             t <- fromMapT(m)
           } yield field[K](gen.from(h)) :: t

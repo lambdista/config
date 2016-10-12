@@ -11,3 +11,4 @@ package syntax
 package object std {
   object option extends OptionSyntax
 }
+

@@ -22,15 +22,17 @@ object ConfParser {
     override def toString()  = name
   }
 
-  val Whitespace      = NamedFunction(" \r\n".contains(_: Char), "Whitespace")
-  val Digits          = NamedFunction('0' to '9' contains (_: Char), "Digits")
-  val StringChars     = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
-  val IdentifierChars = NamedFunction(!":=\" ".contains(_: Char), "IdentifierChars")
+  val Whitespace        = NamedFunction(" \r\n".contains(_: Char), "Whitespace")
+  val Digits            = NamedFunction('0' to '9' contains (_: Char), "Digits")
+  val StringChars       = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
+  val IdentifierChars   = NamedFunction(!":=/#\" ".contains(_: Char), "IdentifierChars")
+  val AnyCharButEndLine = NamedFunction(!"\r\n".contains(_: Char), "AnyCharButEndLine")
 
-  val optionalSpaces: Parser[Unit] = P(CharsWhile(Whitespace).?)
-  val spaces: Parser[Unit]         = P(CharsWhile(Whitespace))
+  val spaces: Parser[Unit]            = P(CharsWhile(Whitespace))
+  val optionalSpaces: Parser[Unit]    = spaces.?
+  val anyCharButEndLine: Parser[Unit] = P(CharsWhile(AnyCharButEndLine))
 
-  val singlelineComment: Parser[Unit] = P("//" ~/ AnyChar.rep ~ spaces)
+  val singlelineComment: Parser[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
 
   val digits: Parser[Unit]                   = P(CharsWhile(Digits))
   val exponent: Parser[Unit]                 = P(CharIn("eE") ~ CharIn("+-").? ~ digits)
@@ -63,7 +65,8 @@ object ConfParser {
   val array: Parser[AbstractList] =
     P("[" ~/ jsonExpr.rep(sep = ",".~/) ~ optionalSpaces ~ "]").map(xs => AbstractList(xs.toList))
 
-  val pair: Parser[(String, AbstractValue)] = P(identifier ~/ optionalSpaces ~ (":" | "=") ~/ jsonExpr)
+  val pair: Parser[(String, AbstractValue)] = P(
+    singlelineComment.? ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singlelineComment.?)
 
   val obj: Parser[AbstractMap] =
     P("{" ~/ pair.rep(sep = ",".~/) ~ optionalSpaces ~ "}").map(x => AbstractMap(x.toMap))
@@ -124,9 +127,9 @@ object ConfParser {
   val range: Parser[Range]                 = intRange | charRange
   val abstractRange: Parser[AbstractRange] = range.map(AbstractRange)
 
-  val jsonExpr: Parser[AbstractValue] = P(
+  val jsonExpr: Parser[AbstractValue] = singlelineComment.? ~ P(
     optionalSpaces ~ (obj | array | abstractDuration | abstractRange | abstractString | `true` | `false` | `null` | abstractNumber) ~ optionalSpaces
-  )
+  ) ~ singlelineComment.?
 
   def parse(confStr: String): Try[Config] = {
     jsonExpr.parse(confStr) match {
@@ -147,18 +150,23 @@ object ConfParserTest {
       infinite: Duration,
       finite: Duration,
       charRange: List[Char],
-      intRange: Range
+      intRange: Range,
+      array: List[Int]
   )
 
   def main(args: Array[String]): Unit = {
     val result: Try[Config] = ConfParser.parse(
-      """{
+      """ // external comment 1
+          |{
+          |// comment 1
           |omg   = "123",
           |"wtf": 12.4123,
           |infinite = Inf,
           |finite = 5 millis,
           |intRange: 0 to 4 by 2,
-          |charRange: 'a' to 'c'
+          |charRange: 'a' to 'c',
+          |array = [1, // comment between two elements of an array
+          |2, 3]
         |}""".stripMargin
     )
 

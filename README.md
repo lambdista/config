@@ -32,7 +32,7 @@ libraryDependencies += "com.lambdista" %% "config" % configVersion
 Note that `configVersion` is the version you want to use. 
 You can find all the released versions [here](https://github.com/lambdista/config/releases).
 
-At the moment only Scala 2.11.x is supported. Support for Scala 2.10.x might be added in future releases.
+Both Scala 2.11.x and 2.10.x are supported.
 
 ## Usage
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:

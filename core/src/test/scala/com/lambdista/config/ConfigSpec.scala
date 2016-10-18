@@ -115,13 +115,15 @@ class ConfigSpec extends UnitSpec {
     val confPath            = "core/src/test/resources/fooish.conf"
     val config: Try[Config] = Config.from(Paths.get(confPath))
 
+    println(s"config: $config")
+
     val fooConfig: Try[FooConfig] = for {
       c <- config
       // first convert the Config into a AbstractMap...
       map <- c.as[AbstractMap]
       // ...then transform AbstractMap keys to match the case class field names
       newMap = map.transformKeys {
-        case "range foo" => "range"
+        case "rangefoo" => "range"
       }
       // Note how a given AbstractMap can be converted intto a case class too
       fooConf <- newMap.as[FooConfig]
@@ -358,5 +360,40 @@ class ConfigSpec extends UnitSpec {
     intercept[KeyNotFoundException] {
       int.get
     }
+  }
+
+  "A config" should "support comments" in {
+    case class Conf(
+        omg: String,
+        bool: Boolean,
+        betweenQuotes: Double,
+        infinite: Duration,
+        finite: Duration,
+        charRange: List[Char],
+        intRange: Range,
+        array: List[Int]
+    )
+
+    val result: Try[Config] = ConfigParser.parse(
+      """ // comment 1
+          |{
+          |// comment 2
+          |omg   = "123",
+          |bool = true,
+          |"betweenQuotes": 12.4123, # comment 3
+          |infinite = Inf,
+          |finite = 5 millis,
+          |# comment 4
+          |intRange: 0 to 4 by 2,
+          |charRange: 'a' to 'c',
+          |array = [1, // comment 5
+          |2, 3]
+        |}""".stripMargin
+    )
+
+    val conf = result.flatMap(_.as[Conf])
+
+    assert(result.isSuccess)
+    assert(conf.isSuccess)
   }
 }

@@ -1,175 +1,149 @@
 package com.lambdista
 package config
 
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Try}
+import java.util.concurrent.TimeUnit
 
-import org.parboiled2._
+import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success, Try}
+
+import fastparse.all._
 
 import com.lambdista.config.exception.ConfigSyntaxException
 
 /**
-  * Configuration parser.
   *
-  * @author Alessandro Lacava
-  * @since 2015-12-09
+  *
+  * @author Alessandro Lacava (@lambdista)
+  * @since 2016-10-13
   */
 object ConfigParser {
-
-  private class ConfigParserImpl(val input: ParserInput) extends Parser {
-    val isStringChars: Char => Boolean = c => !"\"\\".toSet(c)
-    val isIdentifier: Char => Boolean  = c => !":= \"".toSet(c)
-
-    def WS = rule {
-      zeroOrMore(anyOf(" \n\r\t\f"))
-    }
-
-    def cw(char: Char): Rule0 = rule {
-      char ~ WS
-    }
-
-    def wcw(char: Char): Rule0 = rule {
-      WS ~ char ~ WS
-    }
-
-    def digits: Rule0 = rule {
-      CharPredicate.Digit.+
-    }
-
-    def exponent: Rule0 = rule {
-      ignoreCase('e') ~ anyOf("+-").? ~ digits
-    }
-
-    def fractional: Rule0 = rule {
-      "." ~ digits
-    }
-
-    def integer: Rule0 = rule {
-      "0" | (CharPredicate.Digit19 ~ digits.?)
-    }
-
-    def number: Rule1[AbstractNumber] = rule {
-      capture(anyOf("+-").? ~ integer ~ fractional.? ~ exponent.?) ~> ((x: String) => AbstractNumber.apply(x.toDouble))
-    }
-
-    def `false`: Rule1[AbstractBool] = rule {
-      "false" ~ push(AbstractBool(false))
-    }
-
-    def `true`: Rule1[AbstractBool] = rule {
-      "true" ~ push(AbstractBool(true))
-    }
-
-    def `null`[A]: Rule1[AbstractNone.type] = rule {
-      "null" ~ push(AbstractNone)
-    }
-
-    def unicodeEscape: Rule0 = rule {
-      "u" ~ 4.times(CharPredicate.HexDigit)
-    }
-
-    def singleQuote: Rule0 = rule {
-      ch('"')
-    }
-
-    def escape: Rule0 = rule {
-      "\\" ~ (anyOf("\"/\\bfnrt") | unicodeEscape)
-    }
-
-    def identifier: Rule1[String] = rule {
-      WS ~ capture(CharPredicate.from(isIdentifier).+) ~ WS
-    }
-
-    def quotedIdentifier: Rule1[String] = rule {
-      WS ~ singleQuote ~ capture(CharPredicate.from(_ != '"').+) ~ singleQuote ~ WS
-    }
-
-    def strChars: Rule0 = rule {
-      CharPredicate.from(isStringChars)
-    }
-
-    def string: Rule1[AbstractString] = rule {
-      WS ~ singleQuote ~ capture((strChars | escape).*) ~> AbstractString ~ singleQuote
-    }
-
-    def aChar: Rule1[Char] = rule {
-      WS ~ "'" ~ capture(CharPredicate.All) ~> (_.head) ~ "'" ~ WS
-    }
-
-    def char: Rule1[AbstractChar] = rule {
-      aChar ~> AbstractChar
-    }
-
-    def validDurations: Rule0 = rule {
-      "days" | "day" | "d" |
-        "hours" | "hour" | "h" |
-        "minutes" | "minute" | "min" |
-        "seconds" | "second" | "secs" | "sec" | "s" |
-        "milliseconds" | "millisecond" | "millis" | "milli" | "ms" |
-        "microseconds" | "microsecond" | "micros" | "µs" |
-        "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns"
-    }
-
-    def duration: Rule1[AbstractDuration] = rule {
-      capture(integer) ~ WS ~ capture(validDurations) ~>
-        ((value: String, unit: String) => AbstractDuration(Duration.create(value.toLong, unit)))
-    }
-
-    def createRange(start: Int, method: String, end: Int, optStep: Option[Int]): Range = {
-      val baseRange = method match {
-        case "to"    => start to end
-        case "until" => start until end
-      }
-
-      optStep.map(step => baseRange by step).getOrElse(baseRange)
-    }
-
-    def intRange: Rule1[AbstractRange] = {
-      rule {
-        capture(integer) ~ WS ~ capture("to" | "until") ~ WS ~ capture(integer) ~ WS ~ optional(
-          ("by" ~ WS ~ capture(integer))) ~>
-          ((start: String, method: String, end: String, optStep: Option[String]) =>
-             AbstractRange(createRange(start.toInt, method, end.toInt, optStep.map(_.toInt))))
-      }
-    }
-
-    def charRange: Rule1[AbstractRange] = {
-      rule {
-        aChar ~ WS ~ capture("to" | "until") ~ WS ~ aChar ~ WS ~ optional(("by" ~ WS ~ capture(integer))) ~>
-          ((start: Char, method: String, end: Char,
-            optStep: Option[String]) => AbstractRange(createRange(start, method, end, optStep.map(_.toInt))))
-      }
-    }
-
-    def range: Rule1[AbstractRange] = rule {
-      intRange | charRange
-    }
-
-    def list: Rule1[AbstractList] = rule {
-      cw('[') ~ configValue.*.separatedBy(wcw(',')) ~> (xs => AbstractList(xs.toList)) ~ cw(']')
-    }
-
-    def pair: Rule1[(String, AbstractValue)] = rule {
-      ((identifier | quotedIdentifier) ~ (wcw(':') | wcw('=')) ~ configValue) ~> ((a: String,
-                                                                                   b: AbstractValue) => (a, b))
-    }
-
-    def map: Rule1[AbstractMap] = rule {
-      wcw('{') ~ pair.*.separatedBy(wcw(',')) ~> (pairs => AbstractMap(pairs.toMap)) ~ wcw('}')
-    }
-
-    def configValue: Rule1[AbstractValue] = rule {
-      WS ~ (map | list | duration | range | string | number | char | `true` | `false` | `null`) ~ WS
-    }
+  case class NamedFunction[T, V](f: T => V, name: String) extends (T => V) {
+    override def apply(t: T) = f(t)
+    override def toString()  = name
   }
 
-  /**
-    * Parses the string representing the configuration.
-    *
-    * @param configStr the string representing the configuration
-    * @return
-    */
-  def parse(configStr: String): Try[Config] = new ConfigParserImpl(configStr).map.run().map(Config.apply).recoverWith {
-    case e: ParseError => Failure(new ConfigSyntaxException(e.format(configStr)))
+  val Whitespace        = NamedFunction(" \r\n".contains(_: Char), "Whitespace")
+  val Digits            = NamedFunction('0' to '9' contains (_: Char), "Digits")
+  val StringChars       = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
+  val IdentifierChars   = NamedFunction(!":=/#\" ".contains(_: Char), "IdentifierChars")
+  val AnyCharButEndLine = NamedFunction(!"\r\n".contains(_: Char), "AnyCharButEndLine")
+
+  val spaces: Parser[Unit]            = P(CharsWhile(Whitespace))
+  val optionalSpaces: Parser[Unit]    = spaces.?
+  val anyCharButEndLine: Parser[Unit] = P(CharsWhile(AnyCharButEndLine))
+  val anyCharButEndOfMultilineComment: Parser[Unit] = P(StringIn("/*")) ~ P(!StringIn("*/")) ~ P(StringIn("*/"))
+
+  val singleLineComment: Parser[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
+
+  val digits: Parser[Unit]                   = P(CharsWhile(Digits))
+  val exponent: Parser[Unit]                 = P(CharIn("eE") ~ CharIn("+-").? ~ digits)
+  val fractional: Parser[Unit]               = P("." ~ digits)
+  val integral: Parser[Unit]                 = P("0" | CharIn('1' to '9') ~ digits.?)
+  val number: Parser[Double]                 = P(CharIn("+-").? ~ integral ~ fractional.? ~ exponent.?).!.map(_.toDouble)
+  val abstractNumber: Parser[AbstractNumber] = number.map(AbstractNumber)
+
+  val `null`: Parser[Unit]                    = P("null")
+  val abstractNone: Parser[AbstractNone.type] = `null`.map(_ => AbstractNone)
+
+  val `true`: Parser[Boolean]            = P("true").map(_ => true)
+  val `false`: Parser[Boolean]           = P("false").map(_ => false)
+  val abstractBool: Parser[AbstractBool] = (`true` | `false`).map(AbstractBool)
+
+  val hexDigit: Parser[Unit]      = P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
+  val unicodeEscape: Parser[Unit] = P("u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit)
+  val escape: Parser[Unit]        = P("\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape))
+
+  val strChars: Parser[Unit] = P(CharsWhile(StringChars))
+  val idChars: Parser[Unit]  = P(CharsWhile(IdentifierChars))
+
+  val string: Parser[String] = P(optionalSpaces ~ "\"" ~/ (strChars | escape).rep.! ~ "\"")
+
+  val abstractString: Parser[AbstractString] = string.map(AbstractString)
+
+  val unquotedIdentifier: Parser[String] = P((idChars | escape).rep.!)
+  val quotedIdentifier: Parser[String]   = "\"" ~/ unquotedIdentifier ~ "\""
+
+  val identifier: Parser[String] = P(optionalSpaces ~/ (quotedIdentifier | unquotedIdentifier))
+
+  val array: Parser[Seq[AbstractValue]]  = P("[" ~/ jsonExpr.rep(sep = ",".~/) ~ optionalSpaces ~ "]")
+  val abstractList: Parser[AbstractList] = array.map(xs => AbstractList(xs.toList))
+
+  val pair: Parser[(String, AbstractValue)] = P(
+    singleLineComment.? ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singleLineComment.?)
+
+  val obj: Parser[Seq[(String, AbstractValue)]] = P("{" ~/ pair.rep(sep = ",".~/) ~ optionalSpaces ~ "}")
+  val abstractMap: Parser[AbstractMap]          = obj.map(x => AbstractMap(x.toMap))
+
+  object DurationDecoder {
+    def apply(value: Option[Double], unit: String): Duration = {
+      def buildFinite(v: Double): Duration = {
+        val timeUnit: TimeUnit = unit match {
+          case "days" | "day" | "d"                                       => TimeUnit.DAYS
+          case "hours" | "hour" | "h"                                     => TimeUnit.HOURS
+          case "minutes" | "minute" | "min"                               => TimeUnit.MINUTES
+          case "seconds" | "second" | "secs" | "sec" | "s"                => TimeUnit.SECONDS
+          case "milliseconds" | "millisecond" | "millis" | "milli" | "ms" => TimeUnit.MILLISECONDS
+          case "microseconds" | "microsecond" | "micros" | "µs"           => TimeUnit.MICROSECONDS
+          case "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns"     => TimeUnit.NANOSECONDS
+        }
+        Duration(v, timeUnit)
+      }
+
+      def buildInfinite(): Duration = unit match {
+        case "Inf"      => Duration.Inf
+        case "MinusInf" => Duration.MinusInf
+      }
+
+      value.map(buildFinite).getOrElse(buildInfinite())
+    }
+  }
+  val validDuration = "days" | "day" | "d" |
+      "hours" | "hour" | "h" |
+      "minutes" | "minute" | "min" |
+      "seconds" | "second" | "secs" | "sec" | "s" |
+      "milliseconds" | "millisecond" | "millis" | "milli" | "ms" |
+      "microseconds" | "microsecond" | "micros" | "µs" |
+      "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns" |
+      "Inf" | "MinusInf"
+  val duration: Parser[Duration] = P((number.! ~ spaces).? ~ validDuration.!).map {
+    case (value, unit) =>
+      DurationDecoder(value.map(_.toDouble), unit)
+  }
+  val abstractDuration: Parser[AbstractDuration] = duration.map(AbstractDuration)
+
+  def createRange(start: Int, method: String, end: Int, optStep: Option[Int]): Range = {
+    val baseRange = method match {
+      case "to"    => start to end
+      case "until" => start until end
+    }
+
+    optStep.map(step => baseRange by step).getOrElse(baseRange)
+  }
+  val intRange: Parser[Range] =
+    P(integral.! ~ spaces ~ ("to" | "until").! ~ spaces ~ integral.! ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces).map {
+      case (start, method, end, optStep) => createRange(start.toInt, method, end.toInt, optStep.map(_.toInt))
+    }
+  val charRange: Parser[Range] =
+    P("'" ~ AnyChar.! ~ "'" ~ spaces ~ ("to" | "until").! ~ spaces ~ "'" ~ AnyChar.! ~ "'" ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces).map {
+      case (start, method, end, optStep) => createRange(start.head.toInt, method, end.head.toInt, optStep.map(_.toInt))
+    }
+  val range: Parser[Range]                 = intRange | charRange
+  val abstractRange: Parser[AbstractRange] = range.map(AbstractRange)
+
+  val jsonExpr: Parser[AbstractValue] = singleLineComment.? ~ P(
+      optionalSpaces ~ (abstractMap | abstractList | abstractDuration | abstractRange |
+        abstractString | abstractBool | abstractNone | abstractNumber) ~ optionalSpaces
+    ) ~ singleLineComment.?
+
+  def parse(confStr: String): Try[Config] = {
+    jsonExpr.parse(confStr) match {
+      case Parsed.Success(result, _) =>
+        result match {
+          case map: AbstractMap => Success(Config(map))
+          case _ =>
+            Failure(new ConfigSyntaxException("The whole configuration must be represented as a pseudo-json object"))
+        }
+      case x: Parsed.Failure => Failure(new ConfigSyntaxException(x.msg))
+    }
   }
 }

@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := "2.11.8",
-//  crossScalaVersions := Seq("2.10.6", "2.11.8"),
+  crossScalaVersions := Seq("2.10.6", "2.11.8"),
   resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
     Resolver.sonatypeRepo("snapshots")
@@ -27,7 +27,6 @@ lazy val commonSettings = Seq(
     "-deprecation",
     "-unchecked"
   ),
-  scalacOptions ++= Seq("-Ypatmat-exhaust-depth", "off"),
   scalafmtConfig := Some(file(".scalafmt.conf")),
   initialCommands in console :=
     """

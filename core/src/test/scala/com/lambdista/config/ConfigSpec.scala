@@ -115,13 +115,15 @@ class ConfigSpec extends UnitSpec {
     val confPath            = "core/src/test/resources/fooish.conf"
     val config: Try[Config] = Config.from(Paths.get(confPath))
 
+    println(s"config: $config")
+
     val fooConfig: Try[FooConfig] = for {
       c <- config
       // first convert the Config into a AbstractMap...
       map <- c.as[AbstractMap]
       // ...then transform AbstractMap keys to match the case class field names
       newMap = map.transformKeys {
-        case "range foo" => "range"
+        case "rangefoo" => "range"
       }
       // Note how a given AbstractMap can be converted intto a case class too
       fooConf <- newMap.as[FooConfig]
@@ -388,8 +390,6 @@ class ConfigSpec extends UnitSpec {
           |2, 3]
         |}""".stripMargin
     )
-
-    println(s"result: $result")
 
     val conf = result.flatMap(_.as[Conf])
 

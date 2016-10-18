@@ -4,7 +4,7 @@ resolvers ++= Seq(
   "jgit-repo" at "http://download.eclipse.org/jgit/maven"
 )
 
-lazy val scalafmtVersion = "0.4.5"
+lazy val scalafmtVersion = "0.4.7"
 lazy val updatesVersion = "0.2.0"
 lazy val tutVersion = "0.4.4"
 lazy val unidocVersion = "0.3.3"

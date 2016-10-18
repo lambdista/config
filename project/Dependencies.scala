@@ -11,7 +11,6 @@ object Dependencies {
   // Libraries
   val scalatest      = "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   val shapeless      = "com.chuusai"   %% "shapeless" % shapelessVersion
-  val parboiled      = "org.parboiled" %% "parboiled" % parboiledVersion
   val typesafeConfig = "com.typesafe"  % "config"     % typesafeConfigVersion
   val fastparse      = "com.lihaoyi"   %% "fastparse" % fastparseVersion
 
@@ -19,7 +18,6 @@ object Dependencies {
   val coreDeps = Seq(
     scalatest,
     shapeless,
-    parboiled,
     fastparse,
     compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
   )

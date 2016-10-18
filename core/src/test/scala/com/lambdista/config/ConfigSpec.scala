@@ -372,7 +372,7 @@ class ConfigSpec extends UnitSpec {
         array: List[Int]
     )
 
-    val result: Try[Config] = ConfParser.parse(
+    val result: Try[Config] = ConfigParser.parse(
       """ // comment 1
           |{
           |// comment 2

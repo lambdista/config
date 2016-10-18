@@ -14,6 +14,7 @@ import com.lambdista.util.syntax.std.option._
   * @since 2015-11-27
   */
 sealed trait AbstractValue {
+
   /**
     * Tries to convert this [[AbstractValue]] into an `A`, provided that there's an implicit
     * implementation of [[ConcreteValue]][A] in scope.

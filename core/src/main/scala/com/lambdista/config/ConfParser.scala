@@ -31,8 +31,9 @@ object ConfParser {
   val spaces: Parser[Unit]            = P(CharsWhile(Whitespace))
   val optionalSpaces: Parser[Unit]    = spaces.?
   val anyCharButEndLine: Parser[Unit] = P(CharsWhile(AnyCharButEndLine))
+  val anyCharButEndOfMultilineComment: Parser[Unit] = P(StringIn("/*")) ~ P(!StringIn("*/")) ~ P(StringIn("*/"))
 
-  val singlelineComment: Parser[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
+  val singleLineComment: Parser[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
 
   val digits: Parser[Unit]                   = P(CharsWhile(Digits))
   val exponent: Parser[Unit]                 = P(CharIn("eE") ~ CharIn("+-").? ~ digits)
@@ -41,10 +42,12 @@ object ConfParser {
   val number: Parser[Double]                 = P(CharIn("+-").? ~ integral ~ fractional.? ~ exponent.?).!.map(_.toDouble)
   val abstractNumber: Parser[AbstractNumber] = number.map(AbstractNumber)
 
-  val `null`: Parser[AbstractNone.type] = P("null").map(_ => AbstractNone)
+  val `null`: Parser[Unit]                    = P("null")
+  val abstractNone: Parser[AbstractNone.type] = `null`.map(_ => AbstractNone)
 
-  val `false`: Parser[AbstractBool] = P("false").map(_ => AbstractBool(false))
-  val `true`: Parser[AbstractBool]  = P("true").map(_ => AbstractBool(true))
+  val `true`: Parser[Boolean]            = P("true").map(_ => true)
+  val `false`: Parser[Boolean]           = P("false").map(_ => false)
+  val abstractBool: Parser[AbstractBool] = (`true` | `false`).map(AbstractBool)
 
   val hexDigit: Parser[Unit]      = P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
   val unicodeEscape: Parser[Unit] = P("u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit)
@@ -62,14 +65,14 @@ object ConfParser {
 
   val identifier: Parser[String] = P(optionalSpaces ~/ (quotedIdentifier | unquotedIdentifier))
 
-  val array: Parser[AbstractList] =
-    P("[" ~/ jsonExpr.rep(sep = ",".~/) ~ optionalSpaces ~ "]").map(xs => AbstractList(xs.toList))
+  val array: Parser[Seq[AbstractValue]]  = P("[" ~/ jsonExpr.rep(sep = ",".~/) ~ optionalSpaces ~ "]")
+  val abstractList: Parser[AbstractList] = array.map(xs => AbstractList(xs.toList))
 
   val pair: Parser[(String, AbstractValue)] = P(
-    singlelineComment.? ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singlelineComment.?)
+    singleLineComment.? ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singleLineComment.?)
 
-  val obj: Parser[AbstractMap] =
-    P("{" ~/ pair.rep(sep = ",".~/) ~ optionalSpaces ~ "}").map(x => AbstractMap(x.toMap))
+  val obj: Parser[Seq[(String, AbstractValue)]] = P("{" ~/ pair.rep(sep = ",".~/) ~ optionalSpaces ~ "}")
+  val abstractMap: Parser[AbstractMap]          = obj.map(x => AbstractMap(x.toMap))
 
   object DurationDecoder {
     def apply(value: Option[Double], unit: String): Duration = {
@@ -127,53 +130,20 @@ object ConfParser {
   val range: Parser[Range]                 = intRange | charRange
   val abstractRange: Parser[AbstractRange] = range.map(AbstractRange)
 
-  val jsonExpr: Parser[AbstractValue] = singlelineComment.? ~ P(
-    optionalSpaces ~ (obj | array | abstractDuration | abstractRange | abstractString | `true` | `false` | `null` | abstractNumber) ~ optionalSpaces
-  ) ~ singlelineComment.?
+  val jsonExpr: Parser[AbstractValue] = singleLineComment.? ~ P(
+      optionalSpaces ~ (abstractMap | abstractList | abstractDuration | abstractRange |
+        abstractString | abstractBool | abstractNone | abstractNumber) ~ optionalSpaces
+    ) ~ singleLineComment.?
 
   def parse(confStr: String): Try[Config] = {
     jsonExpr.parse(confStr) match {
       case Parsed.Success(result, _) =>
         result match {
           case map: AbstractMap => Success(Config(map))
-          case _                => Failure(new ConfigSyntaxException("The whole configuration must be represented as a pseudo-Map"))
+          case _ =>
+            Failure(new ConfigSyntaxException("The whole configuration must be represented as a pseudo-json object"))
         }
       case x: Parsed.Failure => Failure(new ConfigSyntaxException(x.msg))
     }
-  }
-}
-
-object ConfParserTest {
-  case class Conf(
-      omg: String,
-      wtf: Double,
-      infinite: Duration,
-      finite: Duration,
-      charRange: List[Char],
-      intRange: Range,
-      array: List[Int]
-  )
-
-  def main(args: Array[String]): Unit = {
-    val result: Try[Config] = ConfParser.parse(
-      """ // external comment 1
-          |{
-          |// comment 1
-          |omg   = "123",
-          |"wtf": 12.4123,
-          |infinite = Inf,
-          |finite = 5 millis,
-          |intRange: 0 to 4 by 2,
-          |charRange: 'a' to 'c',
-          |array = [1, // comment between two elements of an array
-          |2, 3]
-        |}""".stripMargin
-    )
-
-    val conf = result.flatMap(_.as[Conf])
-
-    println(s"result: $result")
-    println(s"conf: $conf")
-
   }
 }

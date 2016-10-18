@@ -17,6 +17,7 @@ should be a valid configuration. However, the `null` JSON values can only be con
 is the type you expect because, of course, we don't fancy `null` in Scala code. The *superset* part means that:
   
 * You can optionally use `=` instead of `:`
+* You can use comments: you can start a comment line using both `//` and `#`
 * You can avoid putting the keys between quotes, unless your key contains white spaces
 * You can use a Scala [Duration](http://www.scala-lang.org/api/current/index.html#scala.concurrent.duration.Duration)
 * You can use a Scala [Range](http://www.scala-lang.org/api/current/index.html#scala.collection.immutable.Range)
@@ -37,10 +38,13 @@ At the moment only Scala 2.11.x is supported. Support for Scala 2.10.x might be 
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 
 ```
+// comment 1
 {
   bar = "hello",
+  # comment 2
   baz = 42,
-  list = [1, 2, 3],
+  list = [1, // comment 3
+          2, 3],
   mapList = [
     {
       alpha = "hello",

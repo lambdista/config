@@ -359,4 +359,41 @@ class ConfigSpec extends UnitSpec {
       int.get
     }
   }
+
+  "A config" should "support comments" in {
+    case class Conf(
+        omg: String,
+        bool: Boolean,
+        betweenQuotes: Double,
+        infinite: Duration,
+        finite: Duration,
+        charRange: List[Char],
+        intRange: Range,
+        array: List[Int]
+    )
+
+    val result: Try[Config] = ConfParser.parse(
+      """ // comment 1
+          |{
+          |// comment 2
+          |omg   = "123",
+          |bool = true,
+          |"betweenQuotes": 12.4123, # comment 3
+          |infinite = Inf,
+          |finite = 5 millis,
+          |# comment 4
+          |intRange: 0 to 4 by 2,
+          |charRange: 'a' to 'c',
+          |array = [1, // comment 5
+          |2, 3]
+        |}""".stripMargin
+    )
+
+    println(s"result: $result")
+
+    val conf = result.flatMap(_.as[Conf])
+
+    assert(result.isSuccess)
+    assert(conf.isSuccess)
+  }
 }

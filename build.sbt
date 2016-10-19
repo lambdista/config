@@ -18,10 +18,8 @@ lazy val commonSettings = Seq(
   (unmanagedSourceDirectories in Test) <<= (scalaSource in Test)(Seq(_)),
   scalacOptions := Seq(
     "-feature",
-    "-language:dynamics",
     "-language:higherKinds",
     "-language:implicitConversions",
-    "-language:postfixOps",
     "-encoding",
     "utf8",
     "-deprecation",

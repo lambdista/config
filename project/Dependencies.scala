@@ -9,6 +9,7 @@ object Dependencies {
   lazy val fastparseVersion      = "0.4.1"
 
   // Libraries
+  val compPlugin = compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
   val scalatest      = "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   val shapeless      = "com.chuusai"   %% "shapeless" % shapelessVersion
   val typesafeConfig = "com.typesafe"  % "config"     % typesafeConfigVersion
@@ -19,8 +20,8 @@ object Dependencies {
     scalatest,
     shapeless,
     fastparse,
-    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+    compPlugin
   )
 
-  val typesafeDeps = Seq(typesafeConfig, scalatest)
+  val typesafeDeps = Seq(typesafeConfig, scalatest, compPlugin)
 }

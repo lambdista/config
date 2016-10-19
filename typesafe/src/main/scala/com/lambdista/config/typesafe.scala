@@ -12,6 +12,8 @@ import com.lambdista.config.exception.TypesafeConversionException
 import com.lambdista.util.sequence
 import com.lambdista.util.syntax.std.option._
 
+import java.lang.{Boolean => JBoolean}
+
 /**
   * Adapter apt to load Typesafe Config.
   *
@@ -22,11 +24,13 @@ object typesafe {
   implicit val tsConfigLoader = new ConfigLoader[TSConfig] {
     override def load(resource: TSConfig): Try[Config] = {
       def convertTypesafeConfig(tsConfig: TSConfig): Try[AbstractMap] = {
-        def unwrap[T: ClassTag](tsConfigValue: ConfigValue): Try[T] = tsConfigValue.unwrapped match {
-          case t: T => Success(t)
-          case _ =>
-            val className = implicitly[ClassTag[T]].runtimeClass.getName
-            Failure(new TypesafeConversionException(s"Could not convert $tsConfigValue to underlying type $className"))
+        def unwrap[T: ClassTag](tsConfigValue: ConfigValue): Try[T] = {
+          tsConfigValue.unwrapped match {
+            case t: T => Success(t)
+            case _ =>
+              val className = implicitly[ClassTag[T]].runtimeClass.getName
+              Failure(new TypesafeConversionException(s"Could not convert $tsConfigValue to underlying type $className"))
+          }
         }
 
         def convertConfigObject(tsConfigValue: ConfigValue): Try[AbstractMap] =
@@ -43,7 +47,7 @@ object typesafe {
         def convertConfigValue(tsConfigValue: ConfigValue): Try[AbstractValue] = {
           tsConfigValue.valueType match {
             case ConfigValueType.NULL    => Success(AbstractNone)
-            case ConfigValueType.BOOLEAN => unwrap[Boolean](tsConfigValue).map(AbstractBool)
+            case ConfigValueType.BOOLEAN => unwrap[JBoolean](tsConfigValue).map(x => AbstractBool(x.booleanValue()))
             case ConfigValueType.NUMBER  => unwrap[Number](tsConfigValue).map(n => AbstractNumber(n.doubleValue))
             case ConfigValueType.STRING  => unwrap[String](tsConfigValue).map(AbstractString)
             case ConfigValueType.OBJECT  => convertConfigObject(tsConfigValue)

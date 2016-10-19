@@ -26,11 +26,8 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 As a first step you need to add the dependency to your build file:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config" % configVersion
+libraryDependencies += "com.lambdista" %% "config" % "0.4.1"
 ```
-
-Note that `configVersion` is the version you want to use. 
-You can find all the released versions [here](https://github.com/lambdista/config/releases).
 
 Both Scala 2.11.x and 2.10.x are supported.
 
@@ -299,10 +296,8 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % configVersion
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.4.1"
 ```
-
-`configVersion` is the same you used for the core library.
 
 The example configuration is the following:
 ```

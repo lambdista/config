@@ -26,7 +26,7 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 As a first step you need to add the dependency to your build file:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config" % "0.4.1"
+libraryDependencies += "com.lambdista" %% "config" % "0.4.2"
 ```
 
 Both Scala 2.11.x and 2.10.x are supported.
@@ -296,7 +296,7 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.4.1"
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.4.2"
 ```
 
 The example configuration is the following:

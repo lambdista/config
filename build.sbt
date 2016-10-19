@@ -44,6 +44,7 @@ lazy val noPublishSettings = Seq(
 )
 
 lazy val config = (project in file("."))
+  .enablePlugins(GitBranchPrompt)
   .aggregate(core, util, typesafe)
   .dependsOn(core, util, typesafe)
   .settings(commonSettings)

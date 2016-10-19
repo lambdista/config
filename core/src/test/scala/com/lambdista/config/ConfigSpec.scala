@@ -115,8 +115,6 @@ class ConfigSpec extends UnitSpec {
     val confPath            = "core/src/test/resources/fooish.conf"
     val config: Try[Config] = Config.from(Paths.get(confPath))
 
-    println(s"config: $config")
-
     val fooConfig: Try[FooConfig] = for {
       c <- config
       // first convert the Config into a AbstractMap...

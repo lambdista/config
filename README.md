@@ -1,5 +1,20 @@
 # config: a type safe, purely functional configuration library for Scala
 
+## Table of Contents
+* [Not only another Typesafe's config wrapper](#notOnlyTypesafeConfig)
+* [Configuration Syntax](#configSyntax)
+* [Usage](#usage)
+&nbsp; * [Automatic conversion to a case class](#caseClassConversion)
+&nbsp; * [Value-by-value conversion](#valueByValueConversion)
+* [Config loaders](#configLoaders)
+&nbsp; * [Loading config from a simple String](#stringLoader)
+&nbsp; * [Loading a config from Typesafe Config](#typesafeLoader)
+* [Merging two configurations](#mergingConfigs)
+* [Scaladoc API](#scaladoc)
+* [Bugs and Feedback](#feedback)
+* [License](#license)
+
+<a name="notOnlyTypesafeConfig"></a>
 ## Not only another Typesafe's config wrapper
 Right from the start I didn't want to depend on other config libraries when I started implementing this one so I wrote
 my own parser for a simple *JSONish* syntax. One of the advantages in using your own parser is you can add other custom
@@ -9,8 +24,9 @@ Scala [Range](http://www.scala-lang.org/api/current/index.html#scala.collection.
 Hence, this is not only another [Typesafe's config](https://github.com/typesafehub/config) wrapper. However,
 if you are already using Typesafe's config library and/or just prefer HOCON syntax for your configuration,
 there's an adapter that will convert a Typesafe `Config` object into this config's AST.
-See [this example](#typesafeConfig).
+See [this example](#typesafeLoader).
 
+<a name="configSyntax"></a>
 ## Configuration Syntax
 The syntax expected by this library is a JSON-superset. This means that any JSON file
 should be a valid configuration. However, the `null` JSON values can only be converted to `Option[A]`, where `A` 
@@ -22,7 +38,8 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 * You can use a Scala [Duration](http://www.scala-lang.org/api/current/index.html#scala.concurrent.duration.Duration)
 * You can use a Scala [Range](http://www.scala-lang.org/api/current/index.html#scala.collection.immutable.Range)
 
-## Using config
+<a name="usage"></a>
+## Usage
 As a first step you need to add the dependency to your build file:
 
 ```scala
@@ -31,7 +48,6 @@ libraryDependencies += "com.lambdista" %% "config" % "0.4.3"
 
 Both Scala 2.11.x and 2.10.x are supported.
 
-## Usage
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 
 ```
@@ -59,7 +75,6 @@ Ok, let's see the typical usage scenarios. As a use case consider the following 
 
 Suppose the previous configuration is at the relative path: `core/src/test/resources/foo.conf`.
 
-### Quick Start
 First thing first, load and parse your config:
 
 ```scala
@@ -89,7 +104,8 @@ Once you have a `Config` object you can do two main things with it:
 * Convert it entirely into a case class representing the whole configuration.
 * Retrieve a single value and convert it to whatever it's convertible to.
 
-#### Conversion to a case class
+<a name="caseClassConversion"></a>
+### Automatic conversion to a case class
 Here's how you would map the previous configuration to a case class (`config` is the value from the previous example):
 
 ```scala
@@ -128,7 +144,8 @@ case class its value becomes `None`.
 would use in regular Scala code. For example, you could have used `5 secs` instead of `5 seconds` in `foo.conf` and
 it would have worked smoothly.
 
-#### Retrieve and convert a single value
+<a name="valueByValueConversion"></a>
+### Value-by-value conversion
 Instead of using a case class you may want to retrieve the single values and convert them as you go:
 
 ```scala
@@ -243,7 +260,7 @@ Success(Set(4, 2, 8, 6, 10)) // rangeAsSet
 Notice, however, that in case of `Set` the order is not guaranteed because of the very nature of sets.
 
 <a name="configLoaders"></a>
-### Config Loaders
+## Config loaders
 Apart from loading your config through a `java.nio.file.Path` you can also use the following resources:
 
 * String
@@ -265,7 +282,8 @@ trait ConfigLoader[R] {
 Actually all you need to do is find a way to *read* your resource into a `String` and your done. Have a look at the
 `ConfigLoader` companion object for some examples.
 
-#### Loading config from a simple String
+<a name="stringLoader"></a>
+### Loading config from a simple String
 What follows is an example of loading the config from a simple `String`. In this example you can also appreciate
 two other features of the library: how it deals with `null` values and its ability to convert char ranges too.
 
@@ -293,8 +311,8 @@ Success(None) // age
 Success(List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)) // charRange
 ```
 
-<a name="typesafeConfig"></a>
-#### Loading a config from Typesafe Config
+<a name="typesafeLoader"></a>
+### Loading a config from Typesafe Config
 Here's how simple is loading a configuration passing through Typesafe config library. First thing first, you need to add
 the dependency for the Typesafe config adapter:
 
@@ -349,7 +367,8 @@ The value of `typesafeConfig` will be:
 Success(TypesafeConfig(hello,42,1.414,true,List(1, 2, 3),List(Person(John,Doe), Person(Jane,Doe))))
 ```
 
-### Merging two configurations
+<a name="mergingConfigs"></a>
+## Merging two configurations
 You can also merge two configurations using either the `recursivelyMerge` or `merge` method of `Config`, 
 as in `config.recursivelyMerge(thatConfig)` or `config.merge(thatConfig)`. The behaviour of the
 former is that, given a key, if the correspondent value is a map then `thatConfig`'s value is
@@ -451,12 +470,15 @@ val mergedConfig: Try[Config] = for {
 
 Look at the tests for this library to see the examples in practise.
 
+<a name="scaladoc"></a>
 ## Scaladoc API
 [config API](https://lambdista.github.io/config/api/)
 
+<a name="feedback"></a>
 ## Bugs and Feedback
 For bugs, questions and discussions please use [Github Issues](https://github.com/lambdista/config/issues).
 
+<a name="license"></a>
 ## License
 Copyright 2016 Alessandro Lacava.
 

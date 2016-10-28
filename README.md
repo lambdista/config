@@ -121,7 +121,7 @@ Here you can already notice some interesting features of this library:
 
 * The conversion to a case class happens automatically, no boilerplate on the client side is required.
 * Since `baz` is declared as `Option[Int]` the library automatically wraps the `Int` value into a `Some`.
-* By the way, note also how `missingValue` is not present in the config but since it's declare as `Option` in the
+* By the way, note also how `missingValue` is not present in the config but since it's declared as `Option` in the
 case class its value becomes `None`.
 * The automatic conversion works also for nested structures, see `mapList` for example.
 * `Range` and `Duration` work like a charm. Note that for both `Range` and `Duration` you can use the syntax you

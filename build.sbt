@@ -10,10 +10,7 @@ lazy val commonSettings = Seq(
   organization := "com.lambdista",
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.10.6", "2.11.8"),
-  resolvers ++= Seq(
-    Resolver.sonatypeRepo("releases"),
-    Resolver.sonatypeRepo("snapshots")
-  ),
+  resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile)(Seq(_)),
   (unmanagedSourceDirectories in Test) <<= (scalaSource in Test)(Seq(_)),
   scalacOptions := Seq(
@@ -35,11 +32,7 @@ lazy val commonSettings = Seq(
     """.stripMargin
 )
 
-lazy val noPublishSettings = Seq(
-  publish := (),
-  publishLocal := (),
-  publishArtifact := false
-)
+lazy val noPublishSettings = Seq(publish := (), publishLocal := (), publishArtifact := false)
 
 lazy val config = (project in file("."))
   .enablePlugins(GitBranchPrompt)
@@ -57,27 +50,18 @@ lazy val core = (project in file("core"))
   .dependsOn(util)
   .settings(commonSettings)
   .settings(Publishing.settings)
-  .settings(
-    moduleName := projectName,
-    libraryDependencies ++= coreDeps,
-    dependencyOverrides += shapeless
-  )
+  .settings(moduleName := projectName, libraryDependencies ++= coreDeps, dependencyOverrides += shapeless)
 
 lazy val util = (project in file("util"))
   .settings(commonSettings)
   .settings(Publishing.settings)
-  .settings(
-    moduleName := "config-util"
-  )
+  .settings(moduleName := "config-util")
 
 lazy val typesafe = (project in file("typesafe"))
   .dependsOn(core % "compile->compile;test->test")
   .settings(commonSettings)
   .settings(Publishing.settings)
-  .settings(
-    moduleName := "config-typesafe",
-    libraryDependencies ++= typesafeDeps
-  )
+  .settings(moduleName := "config-typesafe", libraryDependencies ++= typesafeDeps)
 
 lazy val docSettings = tutSettings ++ site.settings ++ ghpages.settings ++ unidocSettings ++ Seq(
     site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "api"),
@@ -92,8 +76,4 @@ lazy val docs = (project in file("docs"))
   .settings(commonSettings)
   .settings(noPublishSettings)
   .settings(docSettings)
-  .settings(
-    moduleName := "config-docs",
-    tutSourceDirectory := file("docs/src/tut"),
-    tutTargetDirectory := file(".")
-  )
+  .settings(moduleName := "config-docs", tutSourceDirectory := file("docs/src/tut"), tutTargetDirectory := file("."))

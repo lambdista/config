@@ -158,8 +158,8 @@ object ConcreteValue {
   }
 
   implicit def genericValue[A, R <: HList](
-      implicit gen: LabelledGeneric.Aux[A, R],
-      fromMap: Lazy[FromMap[R]]
+    implicit gen: LabelledGeneric.Aux[A, R],
+    fromMap: Lazy[FromMap[R]]
   ): ConcreteValue[A] = new ConcreteValue[A] {
     override def apply(abstractValue: AbstractValue): Option[A] =
       abstractValue.as[AbstractMap].toOption.flatMap(x => fromMap.value(x.value).map(gen.from))
@@ -169,37 +169,67 @@ object ConcreteValue {
     def apply(m: Map[String, AbstractValue]): Option[L]
   }
 
-  trait LowPriorityFromMap {
-    implicit def hconsFromMap1[K <: Symbol, V, T <: HList](
-        implicit witness: Witness.Aux[K],
-        concreteValue: ConcreteValue[V],
-        fromMapT: Lazy[FromMap[T]]
-    ): FromMap[FieldType[K, V] :*: T] =
-      new FromMap[FieldType[K, V] :*: T] {
-        def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
-          for {
-            v <- m.get(witness.value.name)
-            h <- concreteValue.apply(v)
-            t <- fromMapT.value(m)
-          } yield field[K](h) :: t
-      }
+  trait LowPriorityFromMap extends LowPriorityFromMap0 {
+    implicit def hconsFromMap12[K <: Symbol, V, T <: HList](
+      implicit witness: Witness.Aux[K],
+      concreteValue: ConcreteValue[V],
+      fromMapT: Lazy[FromMap[T]],
+      ev: V <:< Option[_]
+    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap1(Some(AbstractNone))
   }
+
+  trait LowPriorityFromMap0 {
+    implicit def hconsFromMap11[K <: Symbol, V, T <: HList](
+      implicit witness: Witness.Aux[K],
+      concreteValue: ConcreteValue[V],
+      fromMapT: Lazy[FromMap[T]]
+    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap1(None)
+  }
+
+  private def hconsFromMap1[K <: Symbol, V, T <: HList](default: => Option[AbstractValue])(
+    implicit witness: Witness.Aux[K],
+    concreteValue: ConcreteValue[V],
+    fromMapT: Lazy[FromMap[T]]
+  ): FromMap[FieldType[K, V] :*: T] =
+    new FromMap[FieldType[K, V] :*: T] {
+      def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
+        for {
+          v <- m.get(witness.value.name) orElse default
+          h <- concreteValue.apply(v)
+          t <- fromMapT.value(m)
+        } yield field[K](h) :: t
+    }
 
   object FromMap extends LowPriorityFromMap {
     implicit val hnilFromMap: FromMap[HNil] = new FromMap[HNil] {
       def apply(m: Map[String, AbstractValue]): Option[HNil] = Some(HNil)
     }
 
-    implicit def hconsFromMap0[K <: Symbol, V, R <: HList, T <: HList](
-        implicit witness: Witness.Aux[K],
-        gen: LabelledGeneric.Aux[V, R],
-        fromMapH: Lazy[FromMap[R]],
-        fromMapT: FromMap[T]
+    implicit def hconsFromMap01[K <: Symbol, V, R <: HList, T <: HList](
+      implicit witness: Witness.Aux[K],
+      gen: LabelledGeneric.Aux[V, R],
+      fromMapH: Lazy[FromMap[R]],
+      fromMapT: FromMap[T]
+    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap0(None)
+
+    implicit def hconsFromMap02[K <: Symbol, V, R <: HList, T <: HList](
+      implicit witness: Witness.Aux[K],
+      gen: LabelledGeneric.Aux[V, R],
+      fromMapH: Lazy[FromMap[R]],
+      fromMapT: FromMap[T],
+      ev: V <:< Option[_]
+    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap0(Some(AbstractNone))
+
+    private def hconsFromMap0[K <: Symbol, V, R <: HList, T <: HList](default: => Option[AbstractValue])(
+      implicit witness: Witness.Aux[K],
+      gen: LabelledGeneric.Aux[V, R],
+      fromMapH: Lazy[FromMap[R]],
+      fromMapT: FromMap[T]
     ): FromMap[FieldType[K, V] :*: T] =
       new FromMap[FieldType[K, V] :*: T] {
         def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
           for {
-            v <- m.get(witness.value.name)
+            v <- m.get(witness.value.name) orElse default
             r <- v.as[Map[String, AbstractValue]].toOption
             h <- fromMapH.value(r)
             t <- fromMapT(m)

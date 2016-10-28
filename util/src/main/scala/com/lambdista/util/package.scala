@@ -9,8 +9,9 @@ import scala.collection.generic.CanBuildFrom
   * @since 2015-11-27
   */
 package object util {
-  def traverse[A, B, M[X] <: TraversableOnce[X]](ms: M[Option[A]])(f: A => B)(
-      implicit cbf: CanBuildFrom[M[A], B, M[B]]): Option[M[B]] = {
+  def traverse[A, B, M[X] <: TraversableOnce[X]](
+    ms: M[Option[A]]
+  )(f: A => B)(implicit cbf: CanBuildFrom[M[A], B, M[B]]): Option[M[B]] = {
     val builder = cbf()
     builder.sizeHint(ms.size)
 
@@ -22,5 +23,6 @@ package object util {
   }
 
   def sequence[A, M[X] <: TraversableOnce[X]](ms: M[Option[A]])(
-      implicit cbf: CanBuildFrom[M[A], A, M[A]]): Option[M[A]] = traverse(ms)(identity)
+    implicit cbf: CanBuildFrom[M[A], A, M[A]]
+  ): Option[M[A]] = traverse(ms)(identity)
 }

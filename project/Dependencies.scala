@@ -6,7 +6,7 @@ object Dependencies {
   lazy val shapelessVersion      = "2.3.2"
   lazy val parboiledVersion      = "2.1.3"
   lazy val typesafeConfigVersion = "1.3.1"
-  lazy val fastparseVersion      = "0.4.1"
+  lazy val fastparseVersion      = "0.4.2"
 
   // Libraries
   val compPlugin = compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)

@@ -29,7 +29,9 @@ object typesafe {
             case t: T => Success(t)
             case _ =>
               val className = implicitly[ClassTag[T]].runtimeClass.getName
-              Failure(new TypesafeConversionException(s"Could not convert $tsConfigValue to underlying type $className"))
+              Failure(
+                new TypesafeConversionException(s"Could not convert $tsConfigValue to underlying type $className")
+              )
           }
         }
 

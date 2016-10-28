@@ -82,7 +82,7 @@ class ConfigSpec extends UnitSpec {
 
     string.get shouldBe "hello"
 
-    duration.get shouldBe (5 days)
+    duration.get shouldBe 5.days
 
     charRange.get shouldBe ('a' to 'z')
 
@@ -393,5 +393,25 @@ class ConfigSpec extends UnitSpec {
 
     assert(result.isSuccess)
     assert(conf.isSuccess)
+  }
+
+  "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {
+    case class Foo(a: Int, b: Option[String], c: String, d: Option[Double])
+    case class Bar(foo: Foo, x: Option[Int], y: List[String], z: Option[List[Int]])
+
+    val cfgStr =
+      """{
+        | foo: {
+        |   a: 42,
+        |   c: "hello",
+        |   d: 1
+        |   },
+        | y: ["hello", "world"]
+        |}
+      """.stripMargin
+
+    val result = Config.from(cfgStr).flatMap(_.as[Bar])
+
+    assert(result.isSuccess)
   }
 }

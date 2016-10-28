@@ -28,9 +28,9 @@ object ConfigParser {
   val IdentifierChars   = NamedFunction(!":=/#\" ".contains(_: Char), "IdentifierChars")
   val AnyCharButEndLine = NamedFunction(!"\r\n".contains(_: Char), "AnyCharButEndLine")
 
-  val spaces: Parser[Unit]            = P(CharsWhile(Whitespace))
-  val optionalSpaces: Parser[Unit]    = spaces.?
-  val anyCharButEndLine: Parser[Unit] = P(CharsWhile(AnyCharButEndLine))
+  val spaces: Parser[Unit]                          = P(CharsWhile(Whitespace))
+  val optionalSpaces: Parser[Unit]                  = spaces.?
+  val anyCharButEndLine: Parser[Unit]               = P(CharsWhile(AnyCharButEndLine))
   val anyCharButEndOfMultilineComment: Parser[Unit] = P(StringIn("/*")) ~ P(!StringIn("*/")) ~ P(StringIn("*/"))
 
   val singleLineComment: Parser[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)

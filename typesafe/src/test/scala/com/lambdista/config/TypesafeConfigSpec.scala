@@ -20,12 +20,12 @@ class TypesafeConfigSpec extends UnitSpec {
   case class Person(firstName: String, lastName: String)
 
   case class TypesafeConfig(
-      string: String,
-      int: Int,
-      double: Double,
-      boolean: Boolean,
-      list: List[Int],
-      mapList: List[Person]
+    string: String,
+    int: Int,
+    double: Double,
+    boolean: Boolean,
+    list: List[Int],
+    mapList: List[Person]
   )
 
   "typesafe.conf using HOCON syntax used by the Typesafe config library" should "be loaded and converted correctly" in {
@@ -55,5 +55,26 @@ class TypesafeConfigSpec extends UnitSpec {
     } yield res
 
     assert(configuration.isSuccess)
+  }
+
+  "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {
+    case class Foo(a: Int, b: Option[String], c: String, d: Option[Double])
+    case class Bar(foo: Foo, x: Option[Int], y: List[String], z: Option[List[Int]])
+
+    val cfgStr =
+      """foo: {
+        |   a: 42
+        |   c: "hello"
+        |   d: 1
+        |   }
+        | y: ["hello", "world"]
+        | z: [1, 2, 3]
+      """.stripMargin
+
+    val tsConfig = ConfigFactory.parseString(cfgStr)
+
+    val result = Config.from(tsConfig).flatMap(_.as[Bar])
+
+    assert(result.isSuccess)
   }
 }

@@ -46,7 +46,7 @@ As a first step you need to add the dependency to your build file:
 libraryDependencies += "com.lambdista" %% "config" % "0.4.3"
 ```
 
-Both Scala 2.11.x and 2.10.x are supported.
+Scala 2.12.x, 2.11.x and 2.10.x are supported.
 
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 

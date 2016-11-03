@@ -2,7 +2,7 @@ package com.lambdista
 package config
 
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
@@ -39,7 +39,7 @@ object typesafe {
           convertTypesafeConfig(tsConfigValue.asInstanceOf[ConfigObject].toConfig)
 
         def convertConfigList(tsConfigList: ConfigList): Try[AbstractList] = {
-          val list = tsConfigList.toList.map(v => convertConfigValue(v).toOption)
+          val list = tsConfigList.asScala.toList.map(v => convertConfigValue(v).toOption)
 
           sequence(list)
             .map(AbstractList)
@@ -75,7 +75,7 @@ object typesafe {
           go(Map.empty[String, AbstractValue], tsConfigEntries)
         }
 
-        val tsConfigEntries: List[(String, ConfigValue)] = tsConfig.entrySet.toList.map { entry =>
+        val tsConfigEntries: List[(String, ConfigValue)] = tsConfig.entrySet.asScala.toList.map { entry =>
           val key   = entry.getKey
           val value = entry.getValue
 

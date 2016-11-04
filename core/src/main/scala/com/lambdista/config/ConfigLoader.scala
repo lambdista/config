@@ -31,38 +31,27 @@ trait ConfigLoader[R] {
 object ConfigLoader {
   def apply[R: ConfigLoader]: ConfigLoader[R] = implicitly[ConfigLoader[R]]
 
-  implicit val stringLoader = new ConfigLoader[String] {
-    override def load(resource: String): Try[Config] = ConfigParser.parse(resource)
+  implicit val stringLoader: ConfigLoader[String] = ConfigParser.parse
+
+  implicit val sourceLoader: ConfigLoader[Source] = resource => {
+    val lines = try resource.mkString
+    finally resource.close()
+
+    ConfigLoader[String].load(lines)
   }
 
-  implicit val sourceLoader = new ConfigLoader[Source] {
-    override def load(resource: Source): Try[Config] = {
-      val lines = try resource.mkString
-      finally resource.close()
+  implicit val fileLoader: ConfigLoader[File] = resource =>
+    Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
 
-      ConfigLoader[String].load(lines)
-    }
-  }
+  implicit val pathLoader: ConfigLoader[Path] = resource =>
+    Try(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
 
-  implicit val fileLoader = new ConfigLoader[File] {
-    override def load(resource: File): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
-  }
+  implicit val inputStreamLoader: ConfigLoader[InputStream] = resource =>
+    Try(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
 
-  implicit val pathLoader = new ConfigLoader[Path] {
-    override def load(resource: Path): Try[Config] =
-      Try(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
-  }
+  implicit val uriLoader: ConfigLoader[URI] = resource =>
+    Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
 
-  implicit val inputStreamLoader = new ConfigLoader[InputStream] {
-    override def load(resource: InputStream): Try[Config] =
-      Try(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
-  }
-
-  implicit val uriLoader = new ConfigLoader[URI] {
-    override def load(resource: URI): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
-  }
-
-  implicit val urlLoader = new ConfigLoader[URL] {
-    override def load(resource: URL): Try[Config] = Try(Source.fromURL(resource)).flatMap(ConfigLoader[Source].load)
-  }
+  implicit val urlLoader: ConfigLoader[URL] = resource =>
+    Try(Source.fromURL(resource)).flatMap(ConfigLoader[Source].load)
 }

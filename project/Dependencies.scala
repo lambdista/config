@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   // Versions
-  lazy val scalaTestVersion      = "3.0.0"
+  lazy val scalaTestVersion      = "3.0.1"
   lazy val shapelessVersion      = "2.3.2"
   lazy val parboiledVersion      = "2.1.3"
   lazy val typesafeConfigVersion = "1.3.1"

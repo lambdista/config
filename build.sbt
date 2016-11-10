@@ -15,6 +15,7 @@ lazy val commonSettings = Seq(
     "-feature",
     "-language:higherKinds",
     "-language:implicitConversions",
+    "-Ypartial-unification",
     "-encoding",
     "utf8",
     "-deprecation",

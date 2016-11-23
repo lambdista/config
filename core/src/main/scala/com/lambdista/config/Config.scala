@@ -1,10 +1,11 @@
 package com.lambdista
 package config
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 import com.lambdista.config.exception.{ConversionException, KeyNotFoundException}
 import com.lambdista.util.syntax.std.option._
+import scala.language.dynamics
 
 /**
   * This class represents the configuration.
@@ -12,7 +13,7 @@ import com.lambdista.util.syntax.std.option._
   * @author Alessandro Lacava
   * @since 2015-11-27
   */
-final case class Config(abstractMap: AbstractMap) {
+final case class Config(abstractMap: AbstractMap) extends Dynamic {
   private val values: Map[String, AbstractValue] = abstractMap.value
 
   /**
@@ -145,6 +146,8 @@ final case class Config(abstractMap: AbstractMap) {
   def merge(thatConfig: Config): Config = {
     Config(AbstractMap(this.abstractMap.value ++ thatConfig.abstractMap.value))
   }
+
+  def selectDynamic(key: String): ConfigWalker = ConfigWalker(Success(abstractMap)).selectDynamic(key)
 
   private def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
     def mergeMaps(map1: Map[String, AbstractValue], map2: Map[String, AbstractValue]): Map[String, AbstractValue] = {

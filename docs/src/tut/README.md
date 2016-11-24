@@ -283,6 +283,9 @@ The value of `alpha` will be:
 Success("hello")
 ```
 
+Warning: Of course, IDEs will mark `map.alpha` as an error since they just don't know about the dynamic nature of
+those fields. Nevertheless, your code will keep compiling and working like a charm.
+
 <a name="configLoaders"></a>
 ## Config loaders
 Apart from loading your config through a `java.nio.file.Path` you can also use the following resources:

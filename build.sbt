@@ -5,11 +5,13 @@ import UnidocKeys._
 
 lazy val projectName = "config"
 
+lazy val projectScalaVersion = "2.12.0"
+
 lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
-  scalaVersion := "2.12.0",
-  crossScalaVersions := Seq("2.10.6", "2.11.8"),
+  scalaVersion := projectScalaVersion,
+  crossScalaVersions := Seq(projectScalaVersion, "2.11.8", "2.10.6"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions := Seq(
     "-feature",

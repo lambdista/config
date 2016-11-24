@@ -91,7 +91,7 @@ object ConcreteValue {
     listValue[A].apply(_).map(_.toSet)
 
   implicit def mapValue[A](implicit A: ConcreteValue[A]): ConcreteValue[Map[String, A]] = {
-    def traverseMap[A](m: Map[String, Option[A]]): Option[Map[String, A]] = {
+    def traverseMap(m: Map[String, Option[A]]): Option[Map[String, A]] = {
       @tailrec
       def go(xs: List[(String, Option[A])], acc: Map[String, A]): Option[Map[String, A]] = xs match {
         case a :: as =>
@@ -173,7 +173,8 @@ object ConcreteValue {
       gen: LabelledGeneric.Aux[V, R],
       fromMapH: Lazy[FromMap[R]],
       fromMapT: FromMap[T]
-    ): FromMap[FieldType[K, V] :*: T] = m =>
+    ): FromMap[FieldType[K, V] :*: T] =
+      m =>
         for {
           v <- m.get(witness.value.name) orElse default
           r <- v.as[Map[String, AbstractValue]].toOption

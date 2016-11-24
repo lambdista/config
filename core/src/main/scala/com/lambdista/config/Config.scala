@@ -1,10 +1,11 @@
 package com.lambdista
 package config
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 import com.lambdista.config.exception.{ConversionException, KeyNotFoundException}
 import com.lambdista.util.syntax.std.option._
+import scala.language.dynamics
 
 /**
   * This class represents the configuration.
@@ -12,9 +13,7 @@ import com.lambdista.util.syntax.std.option._
   * @author Alessandro Lacava
   * @since 2015-11-27
   */
-final case class Config(abstractMap: AbstractMap) {
-  private val values: Map[String, AbstractValue] = abstractMap.value
-
+final case class Config(abstractMap: AbstractMap) extends Dynamic {
   /**
     * Tries to convert the configuration to a type for which exists an instance of
     * [[ConcreteValue]] in scope. Since the configuration is represented as a [[AbstractMap]], `A` is generally a final case class or,
@@ -146,6 +145,8 @@ final case class Config(abstractMap: AbstractMap) {
     Config(AbstractMap(this.abstractMap.value ++ thatConfig.abstractMap.value))
   }
 
+  def selectDynamic(key: String): ConfigWalker = ConfigWalker(Success(abstractMap)).selectDynamic(key)
+
   private def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
     def mergeMaps(map1: Map[String, AbstractValue], map2: Map[String, AbstractValue]): Map[String, AbstractValue] = {
       val keys = map1.keySet ++ map2.keySet
@@ -164,13 +165,15 @@ final case class Config(abstractMap: AbstractMap) {
   }
 
   private def getValue(key: String): Try[AbstractValue] = {
-    if (key.indexOf(".") != -1)
-      Try(values(key)).recoverWith {
-        case _ => getValueFromMultipleStrings(key.split("\\.").toList)
-      } else
-      Try(values(key)).recoverWith {
-        case _ => Failure(new KeyNotFoundException(key))
-      }
+    val recoverer: Try[AbstractValue] =
+      if (key.exists(_ == '.'))
+        getValueFromMultipleStrings(key.split("\\.").toList)
+      else
+        Failure(new KeyNotFoundException(key))
+
+    abstractMap.get(key) recoverWith {
+      case _ => recoverer
+    }
   }
 
   private def getValueFromMultipleStrings(keys: List[String]): Try[AbstractValue] = {
@@ -178,16 +181,16 @@ final case class Config(abstractMap: AbstractMap) {
     val middle = keys.tail.init
     val last   = keys.last
 
-    val zero = Try(values(head)).flatMap(_.as[AbstractMap])
+    val zero = abstractMap.get(head).flatMap(_.as[AbstractMap])
 
     val traversalResult: Try[AbstractValue] = middle.foldLeft(zero) { (acc, a) =>
-      acc.flatMap(x => Try(x.value(a)).flatMap(_.as[AbstractMap]))
+      acc.flatMap(x => x.get(a).flatMap(_.as[AbstractMap]))
     }
 
     for {
       c <- traversalResult
       m <- c.as[AbstractMap]
-      v <- Try(m.value(last))
+      v <- m.get(last)
     } yield v
   }
 }

@@ -227,6 +227,12 @@
                         </a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
+                        <a class="class" href="ConfigWalker.html" title="This class lets you walk across a configuration dynamically."></a>
+                        <a href="ConfigWalker.html" title="This class lets you walk across a configuration dynamically.">
+                          ConfigWalker
+                        </a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
                         <a class="object" href="typesafe$.html" title="Adapter apt to load Typesafe Config."></a>
                         <a href="typesafe$.html" title="Adapter apt to load Typesafe Config.">
                           typesafe
@@ -483,9 +489,9 @@
               
         </dd><dt>Since</dt><dd><p>2015-11-27</p></dd></dl></div>
     </li><li name="com.lambdista.config.Config" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ConfigextendsProductwithSerializable"></a><a id="Config:Config"></a>
+      <a id="ConfigextendsDynamicwithProductwithSerializable"></a><a id="Config:Config"></a>
       <span class="permalink">
-      <a href="../../../com/lambdista/config/index.html#ConfigextendsProductwithSerializable" title="Permalink">
+      <a href="../../../com/lambdista/config/index.html#ConfigextendsDynamicwithProductwithSerializable" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -496,7 +502,7 @@
       <span class="symbol">
         <a title="This class represents the configuration." href="Config.html">
               <span class="name">Config</span>
-            </a><span class="params">(<span name="abstractMap">abstractMap: <a href="AbstractMap.html" class="extype" name="com.lambdista.config.AbstractMap">AbstractMap</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+            </a><span class="params">(<span name="abstractMap">abstractMap: <a href="AbstractMap.html" class="extype" name="com.lambdista.config.AbstractMap">AbstractMap</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Dynamic">Dynamic</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
       <p class="shortcomment cmt">This class represents the configuration.</p><div class="fullcomment"><div class="comment cmt"><p>This class represents the configuration.
@@ -526,6 +532,26 @@
     </span>)</span>
               
         </dd><dt>Since</dt><dd><p>2015-12-01</p></dd></dl></div>
+    </li><li name="com.lambdista.config.ConfigWalker" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ConfigWalkerextendsDynamicwithProductwithSerializable"></a><a id="ConfigWalker:ConfigWalker"></a>
+      <span class="permalink">
+      <a href="../../../com/lambdista/config/index.html#ConfigWalkerextendsDynamicwithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="This class lets you walk across a configuration dynamically." href="ConfigWalker.html">
+              <span class="name">ConfigWalker</span>
+            </a><span class="params">(<span name="value">value: <span class="extype" name="scala.util.Try">Try</span>[<a href="AbstractValue.html" class="extype" name="com.lambdista.config.AbstractValue">AbstractValue</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Dynamic">Dynamic</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">This class lets you walk across a configuration dynamically.</p><div class="fullcomment"><div class="comment cmt"><p>This class lets you walk across a configuration dynamically. Nonetheless it manages possible errors within
+the <code>Try</code>.
+</p></div><dl class="attributes block"> <dt>Since</dt><dd><p>2016-11-23</p></dd></dl></div>
     </li></ol>
             </div>
 

@@ -5,7 +5,7 @@ import java.io.InputStream
 import java.nio.file.Paths
 
 import scala.concurrent.duration._
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 import com.lambdista.config.exception.{ConfigSyntaxException, ConversionException, KeyNotFoundException}
 
@@ -37,12 +37,12 @@ class ConfigSpec extends UnitSpec {
   case class Greek(alpha: String, beta: Int)
 
   case class FooConfig(
-      bar: String,
-      baz: Option[Int],
-      list: List[Int],
-      mapList: List[Greek],
-      range: Range,
-      duration: Duration
+    bar: String,
+    baz: Option[Int],
+    list: List[Int],
+    mapList: List[Greek],
+    range: Range,
+    duration: Duration
   )
 
   case class SoftFoo(alpha: Int, baz: Int, bar: String)
@@ -156,6 +156,84 @@ class ConfigSpec extends UnitSpec {
     assert(areSuccesses(list, listAsVector, listAsSet))
   }
 
+  "config elements" should "be traversable in a dynamic way" in {
+    val configStr =
+      """
+        |{
+        |  authMode = "SCRAM-SHA-1",
+        |  timeout = 5 seconds,
+        |  connectionsPerNode = 10,
+        |  keepAlive = true,
+        |  failover = {
+        |    initialDelay = 1 second,
+        |    retries = 15,
+        |    delayFactor = 1.0
+        |  }
+        |}
+      """.stripMargin
+
+    val config: Try[Config] = Config.from(configStr)
+
+    val result: Try[Duration] = for {
+      c            <- config
+      initialDelay <- c.failover.initialDelay.as[Duration]
+    } yield initialDelay
+
+    result shouldBe Success(1 second)
+  }
+
+  "Asking for a missing key dynamically" should "produce a Failure" in {
+    val configStr =
+      """
+        |{
+        |  authMode = "SCRAM-SHA-1",
+        |  timeout = 5 seconds,
+        |  connectionsPerNode = 10,
+        |  keepAlive = true,
+        |  failover = {
+        |    initialDelay = 1 second,
+        |    retries = 15,
+        |    delayFactor = 1.0
+        |  }
+        |}
+      """.stripMargin
+
+    val config: Try[Config] = Config.from(configStr)
+
+    val result: Try[Int] = for {
+      c          <- config
+      missingKey <- c.failover.missingKey.as[Int]
+    } yield missingKey
+
+    result shouldBe Failure(_: KeyNotFoundException)
+  }
+
+  "Trying to convert to the wrong type an existing config element, retrieved dynamically," should "produce a Failure" in {
+    val configStr =
+      """
+        |{
+        |  authMode = "SCRAM-SHA-1",
+        |  timeout = 5 seconds,
+        |  connectionsPerNode = 10,
+        |  keepAlive = true,
+        |  failover = {
+        |    initialDelay = 1 second,
+        |    retries = 15,
+        |    delayFactor = 1.0
+        |  }
+        |}
+      """.stripMargin
+
+    val config: Try[Config] = Config.from(configStr)
+
+    val result: Try[Int] = for {
+      c            <- config
+      initialDelay <- c.failover.initialDelay.as[Int]
+    } yield initialDelay
+
+    result shouldBe Failure(_: ConversionException)
+  }
+
   "A config" should "be convertible into a case class with other nested case classes" in {
     val configStr =
       """
@@ -176,11 +254,11 @@ class ConfigSpec extends UnitSpec {
 
     case class Failover(initialDelay: Duration, retries: Int, delayFactor: Double)
     case class ConnOptions(
-        authMode: String,
-        timeout: Duration,
-        connectionsPerNode: Int,
-        keepAlive: Boolean,
-        failover: Failover
+      authMode: String,
+      timeout: Duration,
+      connectionsPerNode: Int,
+      keepAlive: Boolean,
+      failover: Failover
     )
 
     val result: Try[ConnOptions] = config.flatMap(_.as[ConnOptions])
@@ -362,18 +440,17 @@ class ConfigSpec extends UnitSpec {
 
   "A config" should "support comments" in {
     case class Conf(
-        omg: String,
-        bool: Boolean,
-        betweenQuotes: Double,
-        infinite: Duration,
-        finite: Duration,
-        charRange: List[Char],
-        intRange: Range,
-        array: List[Int]
+      omg: String,
+      bool: Boolean,
+      betweenQuotes: Double,
+      infinite: Duration,
+      finite: Duration,
+      charRange: List[Char],
+      intRange: Range,
+      array: List[Int]
     )
 
-    val result: Try[Config] = ConfigParser.parse(
-      """ // comment 1
+    val result: Try[Config] = ConfigParser.parse(""" // comment 1
           |{
           |// comment 2
           |omg   = "123",
@@ -386,8 +463,7 @@ class ConfigSpec extends UnitSpec {
           |charRange: 'a' to 'c',
           |array = [1, // comment 5
           |2, 3]
-        |}""".stripMargin
-    )
+        |}""".stripMargin)
 
     val conf = result.flatMap(_.as[Conf])
 

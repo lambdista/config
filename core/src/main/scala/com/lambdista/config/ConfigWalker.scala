@@ -17,9 +17,9 @@ final case class ConfigWalker(value: Try[AbstractValue]) extends Dynamic {
   def selectDynamic(key: String): ConfigWalker = {
     val searchResult = value.flatMap {
       case x: AbstractMap => x.get(key)
-      case _ =>
+      case x =>
         Failure(
-          new KeyNotFoundException(s"$this is not an AbstractMap so the $key does not make sense on this object")
+          new KeyNotFoundException(s"$x is not an AbstractMap so the $key key does not make sense on this object")
         )
     }
 

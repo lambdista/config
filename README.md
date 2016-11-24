@@ -6,6 +6,7 @@
 * [Usage](#usage)
     * [Automatic conversion to a case class](#caseClassConversion)
     * [Value-by-value conversion](#valueByValueConversion)
+    * [Dynamic value-by-value conversion](#dynamicValueByValueConversion)
 * [Config loaders](#configLoaders)
     * [Loading config from a simple String](#stringLoader)
     * [Loading a config from Typesafe Config](#typesafeLoader)
@@ -58,6 +59,10 @@ Ok, let's see the typical usage scenarios. As a use case consider the following 
   baz = 42,
   list = [1, // comment 3
           2, 3],
+  map = {
+    alpha = "hello",
+    beta = 42
+  },
   mapList = [
     {
       alpha = "hello",
@@ -114,7 +119,8 @@ case class Greek(alpha: String, beta: Int)
 case class FooConfig(
     bar: String, 
     baz: Option[Int], 
-    list: List[Int], 
+    list: List[Int],
+    map: Greek,
     mapList: List[Greek], 
     range: Range, 
     duration: Duration,
@@ -130,7 +136,7 @@ val fooConfig: Try[FooConfig] = for {
 The value of `fooConfig` will be:
 
 ```scala
-Success(FooConfig(hello,Some(42),List(1, 2, 3),List(Greek(hello,42), Greek(world,24)),Range(2, 4, 6, 8, 10),5 seconds))
+Success(FooConfig(hello,Some(42),List(1, 2, 3),Greek(hello,42),List(Greek(hello,42), Greek(world,24)),Range(2, 4, 6, 8, 10),5 seconds))
 ```
 
 Here you can already notice some interesting features of this library:
@@ -258,6 +264,24 @@ Success(Set(4, 2, 8, 6, 10)) // rangeAsSet
 ```
 
 Notice, however, that in case of `Set` the order is not guaranteed because of the very nature of sets.
+
+<a name="dynamicValueByValueConversion"></a>
+### Dynamic value-by-value conversion
+You can also use a dynamic syntax to access the configuration values by _pretending_ the `Config` object has 
+those fields:
+
+```scala
+val alpha: Try[String] = for {
+  conf <- config
+  result <- conf.map.alpha.as[String] // equivalent to: conf.getAs[String]("map.alpha")
+} yield result
+```
+
+The value of `alpha` will be:
+
+```scala
+Success("hello")
+```
 
 <a name="configLoaders"></a>
 ## Config loaders

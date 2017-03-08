@@ -9,7 +9,7 @@ object Dependencies {
   lazy val fastparseVersion      = "0.4.2"
 
   // Libraries
-  val compPlugin = compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+  val compPlugin = compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch)
   val scalatest      = "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   val shapeless      = "com.chuusai"   %% "shapeless" % shapelessVersion
   val typesafeConfig = "com.typesafe"  % "config"     % typesafeConfigVersion

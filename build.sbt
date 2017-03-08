@@ -40,9 +40,9 @@ lazy val config = (project in file("."))
   .aggregate(core, util, typesafe)
   .dependsOn(core, util, typesafe)
   .settings(commonSettings)
-  .settings(noPublishSettings)
+  .settings(Publishing.settings)
   .settings(
-    moduleName := "config-root",
+    moduleName := s"$projectName-root",
     (unmanagedSourceDirectories in Compile) := Nil,
     (unmanagedSourceDirectories in Test) := Nil
   )
@@ -51,18 +51,18 @@ lazy val core = (project in file("core"))
   .dependsOn(util)
   .settings(commonSettings)
   .settings(Publishing.settings)
-  .settings(moduleName := projectName, libraryDependencies ++= coreDeps, dependencyOverrides += shapeless)
+  .settings(moduleName := s"$projectName-core", libraryDependencies ++= coreDeps, dependencyOverrides += shapeless)
 
 lazy val util = (project in file("util"))
   .settings(commonSettings)
   .settings(Publishing.settings)
-  .settings(moduleName := "config-util")
+  .settings(moduleName := s"$projectName-util")
 
 lazy val typesafe = (project in file("typesafe"))
   .dependsOn(core % "compile->compile;test->test")
   .settings(commonSettings)
   .settings(Publishing.settings)
-  .settings(moduleName := "config-typesafe", libraryDependencies ++= typesafeDeps)
+  .settings(moduleName := s"$projectName-typesafe", libraryDependencies ++= typesafeDeps)
 
 lazy val docSettings = tutSettings ++ site.settings ++ ghpages.settings ++ unidocSettings ++ Seq(
     site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "api"),
@@ -77,4 +77,4 @@ lazy val docs = (project in file("docs"))
   .settings(commonSettings)
   .settings(noPublishSettings)
   .settings(docSettings)
-  .settings(moduleName := "config-docs", tutSourceDirectory := file("docs/src/tut"), tutTargetDirectory := file("."))
+  .settings(moduleName := s"$projectName-docs", tutSourceDirectory := file("docs/src/tut"), tutTargetDirectory := file("."))

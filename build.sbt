@@ -51,7 +51,7 @@ lazy val core = (project in file("core"))
   .dependsOn(util)
   .settings(commonSettings)
   .settings(Publishing.settings)
-  .settings(moduleName := s"$projectName-core", libraryDependencies ++= coreDeps, dependencyOverrides += shapeless)
+  .settings(moduleName := projectName, libraryDependencies ++= coreDeps, dependencyOverrides += shapeless)
 
 lazy val util = (project in file("util"))
   .settings(commonSettings)

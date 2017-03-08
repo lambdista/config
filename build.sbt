@@ -5,7 +5,7 @@ import UnidocKeys._
 
 lazy val projectName = "config"
 
-lazy val projectScalaVersion = "2.12.0"
+lazy val projectScalaVersion = "2.12.1"
 
 lazy val commonSettings = Seq(
   moduleName := projectName,

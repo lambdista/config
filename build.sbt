@@ -1,17 +1,16 @@
 import Dependencies._
-import com.typesafe.sbt.SbtGhPages.GhPagesKeys._
-import com.typesafe.sbt.SbtSite.SiteKeys._
-import UnidocKeys._
 
 lazy val projectName = "config"
 
-lazy val projectScalaVersion = "2.12.1"
+lazy val projectScalaVersion = "2.12.8"
 
 lazy val commonSettings = Seq(
+  useGpg := true,
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
-  crossScalaVersions := Seq(projectScalaVersion, "2.11.8", "2.10.6"),
+  version := "0.5.2",
+  crossScalaVersions := Seq(projectScalaVersion, "2.11.8"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions := Seq(
     "-feature",
@@ -33,10 +32,9 @@ lazy val commonSettings = Seq(
     """.stripMargin
 )
 
-lazy val noPublishSettings = Seq(publish := (), publishLocal := (), publishArtifact := false)
+lazy val noPublishSettings = Seq(skip in publish := true)
 
 lazy val config = (project in file("."))
-  .enablePlugins(GitBranchPrompt)
   .aggregate(core, util, typesafe)
   .dependsOn(core, util, typesafe)
   .settings(commonSettings)
@@ -64,17 +62,9 @@ lazy val typesafe = (project in file("typesafe"))
   .settings(Publishing.settings)
   .settings(moduleName := s"$projectName-typesafe", libraryDependencies ++= typesafeDeps)
 
-lazy val docSettings = tutSettings ++ site.settings ++ ghpages.settings ++ unidocSettings ++ Seq(
-    site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "api"),
-    ghpagesNoJekyll := false,
-    git.remoteRepo := "https://github.com/lambdista/config",
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(util),
-    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.svg" | "*.js" | "*.swf" | "*.yml" | "*.md"
-  )
-
 lazy val docs = (project in file("docs"))
   .dependsOn(core, typesafe)
+  .enablePlugins(TutPlugin)
   .settings(commonSettings)
   .settings(noPublishSettings)
-  .settings(docSettings)
   .settings(moduleName := s"$projectName-docs", tutSourceDirectory := file("docs/src/tut"), tutTargetDirectory := file("."))

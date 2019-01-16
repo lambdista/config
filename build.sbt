@@ -10,7 +10,7 @@ lazy val commonSettings = Seq(
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
   version := "0.5.1",
-  crossScalaVersions := Seq(projectScalaVersion, "2.11.8", "2.10.6"),
+  crossScalaVersions := Seq(projectScalaVersion, "2.11.8"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions := Seq(
     "-feature",

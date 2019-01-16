@@ -69,7 +69,7 @@ object ConfigParser {
   val abstractList: Parser[AbstractList] = array.map(xs => AbstractList(xs.toList))
 
   val pair: Parser[(String, AbstractValue)] = P(
-    singleLineComment.? ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singleLineComment.?)
+    singleLineComment.rep ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singleLineComment.rep)
 
   val obj: Parser[Seq[(String, AbstractValue)]] = P("{" ~/ pair.rep(sep = ",".~/) ~ optionalSpaces ~ "}")
   val abstractMap: Parser[AbstractMap]          = obj.map(x => AbstractMap(x.toMap))
@@ -130,10 +130,10 @@ object ConfigParser {
   val range: Parser[Range]                 = intRange | charRange
   val abstractRange: Parser[AbstractRange] = range.map(AbstractRange)
 
-  val jsonExpr: Parser[AbstractValue] = singleLineComment.? ~ P(
+  val jsonExpr: Parser[AbstractValue] = singleLineComment.rep ~ P(
       optionalSpaces ~ (abstractMap | abstractList | abstractDuration | abstractRange |
         abstractString | abstractBool | abstractNone | abstractNumber) ~ optionalSpaces
-    ) ~ singleLineComment.?
+    ) ~ singleLineComment.rep
 
   def parse(confStr: String): Try[Config] = {
     jsonExpr.parse(confStr) match {

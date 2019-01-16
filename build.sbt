@@ -62,18 +62,9 @@ lazy val typesafe = (project in file("typesafe"))
   .settings(Publishing.settings)
   .settings(moduleName := s"$projectName-typesafe", libraryDependencies ++= typesafeDeps)
 
-//lazy val docSettings = tutSettings ++ site.settings ++ ghpages.settings ++ unidocSettings ++ Seq(
-//    site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "api"),
-//    ghpagesNoJekyll := false,
-//    git.remoteRepo := "https://github.com/lambdista/config",
-//    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(util),
-//    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.svg" | "*.js" | "*.swf" | "*.yml" | "*.md"
-//  )
-
 lazy val docs = (project in file("docs"))
   .dependsOn(core, typesafe)
   .enablePlugins(TutPlugin)
   .settings(commonSettings)
   .settings(noPublishSettings)
-//  .settings(docSettings)
   .settings(moduleName := s"$projectName-docs", tutSourceDirectory := file("docs/src/tut"), tutTargetDirectory := file("."))

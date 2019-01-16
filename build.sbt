@@ -5,12 +5,12 @@ lazy val projectName = "config"
 lazy val projectScalaVersion = "2.12.8"
 
 lazy val commonSettings = Seq(
-  useGpg := true,
+  publishTo := sonatypePublishTo.value,
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
   version := "0.5.2",
-  crossScalaVersions := Seq(projectScalaVersion, "2.11.8"),
+  crossScalaVersions := Seq(projectScalaVersion, "2.11.12"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions := Seq(
     "-feature",
@@ -38,7 +38,6 @@ lazy val config = (project in file("."))
   .aggregate(core, util, typesafe)
   .dependsOn(core, util, typesafe)
   .settings(commonSettings)
-  .settings(Publishing.settings)
   .settings(
     moduleName := s"$projectName-root",
     (unmanagedSourceDirectories in Compile) := Nil,
@@ -48,18 +47,15 @@ lazy val config = (project in file("."))
 lazy val core = (project in file("core"))
   .dependsOn(util)
   .settings(commonSettings)
-  .settings(Publishing.settings)
   .settings(moduleName := projectName, libraryDependencies ++= coreDeps, dependencyOverrides += shapeless)
 
 lazy val util = (project in file("util"))
   .settings(commonSettings)
-  .settings(Publishing.settings)
   .settings(moduleName := s"$projectName-util")
 
 lazy val typesafe = (project in file("typesafe"))
   .dependsOn(core % "compile->compile;test->test")
   .settings(commonSettings)
-  .settings(Publishing.settings)
   .settings(moduleName := s"$projectName-typesafe", libraryDependencies ++= typesafeDeps)
 
 lazy val docs = (project in file("docs"))
@@ -67,4 +63,8 @@ lazy val docs = (project in file("docs"))
   .enablePlugins(TutPlugin)
   .settings(commonSettings)
   .settings(noPublishSettings)
-  .settings(moduleName := s"$projectName-docs", tutSourceDirectory := file("docs/src/tut"), tutTargetDirectory := file("."))
+  .settings(
+    moduleName := s"$projectName-docs",
+    tutSourceDirectory := file("docs/src/tut"),
+    tutTargetDirectory := file(".")
+  )

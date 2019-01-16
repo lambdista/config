@@ -499,7 +499,7 @@ Look at the tests for this library to see the examples in practise.
 
 <a name="scaladoc"></a>
 ## Scaladoc API
-[config API](https://lambdista.github.io/config/api/)
+[config API](https://javadoc.io/doc/com.lambdista/config_2.12)
 
 <a name="feedback"></a>
 ## Bugs and Feedback

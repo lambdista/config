@@ -61,17 +61,7 @@ abstract class SonatypePublishing() {
             <url>{developerUrl}</url>
           </developer>
         </developers>),
-    credentialsSetting,
     publishArtifact in Test := false,
     pomIncludeRepository := (_ => false)
   )
-
-  lazy val credentialsSetting = credentials += {
-    Seq("SONATYPE_USER", "SONATYPE_PASS").map(k => sys.env.get(k)) match {
-      case Seq(Some(user), Some(pass)) =>
-        Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", user, pass)
-      case _ =>
-        Credentials(Path.userHome / ".ivy2" / ".credentials")
-    }
-  }
 }

@@ -471,6 +471,46 @@ class ConfigSpec extends UnitSpec {
     assert(conf.isSuccess)
   }
 
+  it should "support single-line comments repeated multiple times" in {
+    val result: Try[Config] = ConfigParser.parse(
+      """
+        |// comment 1
+        |# comment 2
+        |// comment 3
+        |// comment 4
+        |{
+        |  bar = "hello",
+        |  # comment 2
+        |  baz = 42,
+        |  list = [1, // comment 3
+        |          2, 3],
+        |  map = {
+        |    alpha = "hello",
+        |    beta = 42
+        |  },
+        |  mapList = [
+        |    {
+        |      alpha = "hello",
+        |      beta = 42
+        |    },
+        |    {
+        |      alpha = "world",
+        |      beta = 24
+        |    }
+        |  ],
+        |  range = 2 to 10 by 2,
+        |  duration = 5 seconds
+        |}
+      """.stripMargin)
+
+    val conf = result.flatMap(_.as[Map[String, AbstractValue]])
+
+    conf.foreach(println)
+
+    assert(result.isSuccess)
+    assert(conf.isSuccess)
+  }
+
   "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {
     case class Foo(a: Int, b: Option[String], c: String, d: Option[Double])
     case class Bar(foo: Foo, x: Option[Int], y: List[String], z: Option[List[Int]])

@@ -51,6 +51,7 @@ lazy val core = (project in file("core"))
 
 lazy val util = (project in file("util"))
   .settings(commonSettings)
+  .settings(noPublishSettings)
   .settings(moduleName := s"$projectName-util")
 
 lazy val typesafe = (project in file("typesafe"))

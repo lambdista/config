@@ -6,7 +6,8 @@
 * [Not only another Typesafe's config wrapper](#notOnlyTypesafeConfig)
 * [Configuration Syntax](#configSyntax)
 * [Usage](#usage)
-    * [Automatic conversion to a case class](#caseClassConversion)
+    * [Automatic conversion to case class](#caseClassConversion)
+    * [Automatic conversion to Map[String, A]](#mapConversion)
     * [Value-by-value conversion](#valueByValueConversion)
     * [Dynamic value-by-value conversion](#dynamicValueByValueConversion)
 * [Config loaders](#configLoaders)
@@ -112,7 +113,7 @@ Once you have a `Config` object you can do two main things with it:
 * Retrieve a single value and convert it to whatever it's convertible to.
 
 <a name="caseClassConversion"></a>
-### Automatic conversion to a case class
+### Automatic conversion to case class
 Here's how you would map the previous configuration to a case class (`config` is the value from the previous example):
 
 ```scala
@@ -151,6 +152,36 @@ case class its value becomes `None`.
 * `Range` and `Duration` work like a charm. Note that for both `Range` and `Duration` you can use the syntax you
 would use in regular Scala code. For example, you could have used `5 secs` instead of `5 seconds` in `foo.conf` and
 it would have worked smoothly.
+
+<a name="mapConversion"></a>
+### Automatic conversion to `Map[String, A]`
+You can convert a configuration to a `Map[String, A]`, provided that all the values in the `Map` have the same type,
+`A`, and there exists an implicit instance of `ConcreteValue[A]` in scope. Most of the times this instance is
+automatically generated as in the case class example so you don't need to worry about that.
+Here's an example:
+
+```scala
+val cfgStr = """
+{
+  foo = 0,
+  bar = 1,
+  baz = 42
+}
+"""
+
+val config: Try[Config] = Config.from(cfgStr)
+
+val confAsMap: Try[Map[String, Int]] = for {
+  conf <- config
+  result <- conf.as[Map[String, Int]]
+} yield result
+```
+
+The value of `confAsMap` will be:
+
+```scala
+Success(Map(foo -> 0, bar -> 1, baz -> 42))
+```
 
 <a name="valueByValueConversion"></a>
 ### Value-by-value conversion
@@ -509,7 +540,7 @@ For bugs, questions and discussions please use [Github Issues](https://github.co
 
 <a name="license"></a>
 ## License
-Copyright 2016 Alessandro Lacava.
+Copyright 2016-2019 Alessandro Lacava.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at

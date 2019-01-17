@@ -5,7 +5,8 @@ lazy val projectName = "config"
 lazy val projectScalaVersion = "2.12.8"
 
 lazy val commonSettings = Seq(
-  publishTo := sonatypePublishTo.value,
+//  publishTo := sonatypePublishTo.value,
+//  updateOptions := updateOptions.value.withGigahorse(false),
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
@@ -38,6 +39,7 @@ lazy val config = (project in file("."))
   .aggregate(core, util, typesafe)
   .dependsOn(core, util, typesafe)
   .settings(commonSettings)
+  .settings(noPublishSettings)
   .settings(
     moduleName := s"$projectName-root",
     (unmanagedSourceDirectories in Compile) := Nil,
@@ -51,7 +53,6 @@ lazy val core = (project in file("core"))
 
 lazy val util = (project in file("util"))
   .settings(commonSettings)
-  .settings(noPublishSettings)
   .settings(moduleName := s"$projectName-util")
 
 lazy val typesafe = (project in file("typesafe"))

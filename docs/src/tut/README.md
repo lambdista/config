@@ -44,13 +44,15 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 
 <a name="usage"></a>
 ## Usage
-As a first step you need to add the dependency to your build file:
+As a first step you need to add the resolver and dependency to your build file:
 
 ```scala
+resolvers += "lambdista at bintray" at "https://dl.bintray.com/lambdista/maven"
+
 libraryDependencies += "com.lambdista" %% "config" % "0.5.2"
 ```
 
-Scala 2.12.x, 2.11.x and 2.10.x are supported.
+Scala 2.12.x and 2.11.x are supported.
 
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 

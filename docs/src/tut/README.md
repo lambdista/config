@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/lambdista/config.svg?branch=master)](https://travis-ci.com/lambdista/config) [![codecov.io](http://codecov.io/github/lambdista/config/coverage.svg?branch=master)](http://codecov.io/github/lambdista/config?branch=master)
+[![Build Status](https://travis-ci.org/lambdista/config.svg?branch=master)](https://travis-ci.org/lambdista/config) [![codecov.io](http://codecov.io/github/lambdista/config/coverage.svg?branch=master)](http://codecov.io/github/lambdista/config?branch=master)
 
 # config: a type safe, purely functional configuration library for Scala
 

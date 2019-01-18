@@ -109,7 +109,7 @@ As you can see the result is a `Try[Config]`. Indeed you can get two types of er
 * The resource cannot be found.
 * The resource can be found but its parsing failed.
 
-In both cases you would get a `Failure` wrapping the appropriate exception.
+In both cases you would get a `Failure` wrapping the appropriate `Error` (a subclass of `Exception`).
 
 Once you have a `Config` object you can do two main things with it:
 

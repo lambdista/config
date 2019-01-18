@@ -5,8 +5,6 @@ lazy val projectName = "config"
 lazy val projectScalaVersion = "2.12.8"
 
 lazy val commonSettings = Seq(
-//  publishTo := sonatypePublishTo.value,
-//  updateOptions := updateOptions.value.withGigahorse(false),
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,

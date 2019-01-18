@@ -12,12 +12,12 @@ lazy val coursierVersion   = "1.0.0"
 lazy val revolverVersion   = "0.9.1"
 lazy val tutVersion        = "0.6.10"
 lazy val scovVersion       = "1.5.1"
-lazy val bintrayVersion        = "0.5.4"
+lazy val bintrayVersion    = "0.5.4"
 
-addSbtPlugin("io.get-coursier"  % "sbt-coursier"  % coursierVersion)
-addSbtPlugin("com.geirsson"     % "sbt-scalafmt"  % scalafmtVersion)
-addSbtPlugin("com.timushev.sbt" % "sbt-updates"   % sbtUpdatesVersion)
-addSbtPlugin("io.spray"         % "sbt-revolver"  % revolverVersion)
-addSbtPlugin("org.tpolecat"     % "tut-plugin"    % tutVersion)
-addSbtPlugin("org.scoverage"    % "sbt-scoverage" % scovVersion)
-addSbtPlugin("org.foundweekends" % "sbt-bintray" % bintrayVersion)
+addSbtPlugin("io.get-coursier"   % "sbt-coursier"  % coursierVersion)
+addSbtPlugin("com.geirsson"      % "sbt-scalafmt"  % scalafmtVersion)
+addSbtPlugin("com.timushev.sbt"  % "sbt-updates"   % sbtUpdatesVersion)
+addSbtPlugin("io.spray"          % "sbt-revolver"  % revolverVersion)
+addSbtPlugin("org.tpolecat"      % "tut-plugin"    % tutVersion)
+addSbtPlugin("org.scoverage"     % "sbt-scoverage" % scovVersion)
+addSbtPlugin("org.foundweekends" % "sbt-bintray"   % bintrayVersion)

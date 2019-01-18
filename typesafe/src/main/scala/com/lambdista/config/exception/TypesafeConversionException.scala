@@ -8,4 +8,4 @@ package exception
   * @author Alessandro Lacava
   * @since 2016-01-07
   */
-class TypesafeConversionException(message: String) extends RuntimeException(message)
+class TypesafeConversionError(message: String) extends RuntimeException(message)

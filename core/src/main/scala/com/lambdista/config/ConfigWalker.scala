@@ -3,7 +3,6 @@ package com.lambdista.config
 import scala.language.dynamics
 import scala.util.{Failure, Try}
 
-import com.lambdista.config.exception.{ConversionException, KeyNotFoundException}
 import com.lambdista.util.syntax.std.option._
 
 /**
@@ -19,7 +18,7 @@ final case class ConfigWalker(value: Try[AbstractValue]) extends Dynamic {
       case x: AbstractMap => x.get(key)
       case x =>
         Failure(
-          new KeyNotFoundException(s"$x is not an AbstractMap so the $key key does not make sense on this object")
+          new KeyNotFoundError(s"$x is not an AbstractMap so the $key key does not make sense on this object")
         )
     }
 
@@ -29,6 +28,6 @@ final case class ConfigWalker(value: Try[AbstractValue]) extends Dynamic {
   def as[A: ConcreteValue]: Try[A] =
     for {
       abstractValue <- value
-      concreteValue <- ConcreteValue[A].apply(abstractValue).toTry(new ConversionException(abstractValue))
+      concreteValue <- ConcreteValue[A].apply(abstractValue).toTry(new ConversionError(abstractValue))
     } yield concreteValue
 }

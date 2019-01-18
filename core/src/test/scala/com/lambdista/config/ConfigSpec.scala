@@ -7,8 +7,6 @@ import java.nio.file.Paths
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-import com.lambdista.config.exception.{ConfigSyntaxException, ConversionException, KeyNotFoundException}
-
 /**
   * Unit Test for Config.
   *
@@ -205,7 +203,7 @@ class ConfigSpec extends UnitSpec {
       missingKey <- c.failover.missingKey.as[Int]
     } yield missingKey
 
-    result shouldBe Failure(_: KeyNotFoundException)
+    result shouldBe Failure(_: KeyNotFoundError)
   }
 
   "Trying to convert to the wrong type an existing config element, retrieved dynamically," should "produce a Failure" in {
@@ -231,7 +229,7 @@ class ConfigSpec extends UnitSpec {
       initialDelay <- c.failover.initialDelay.as[Int]
     } yield initialDelay
 
-    result shouldBe Failure(_: ConversionException)
+    result shouldBe Failure(_: ConversionError)
   }
 
   "A config" should "be convertible into a case class with other nested case classes" in {
@@ -398,19 +396,19 @@ class ConfigSpec extends UnitSpec {
     foo should matchPattern { case Success("\\\"hello world\\\"") => }
   }
 
-  "An ill-formed config" should "fail with a ConfigSyntaxException" in {
+  "An ill-formed config" should "fail with a ConfigSyntaxError" in {
     val confStr = "{a = 42"
 
     val config: Try[Config] = Config.from(confStr)
 
     assert(config.isFailure)
 
-    intercept[ConfigSyntaxException] {
+    intercept[ConfigSyntaxError] {
       config.get
     }
   }
 
-  "A config element not convertible to a given type" should "fail with a ConversionException" in {
+  "A config element not convertible to a given type" should "fail with a ConversionError" in {
     val confStr = "{int = 42}"
 
     val config: Try[Config] = Config.from(confStr)
@@ -419,12 +417,12 @@ class ConfigSpec extends UnitSpec {
 
     assert(string.isFailure)
 
-    intercept[ConversionException] {
+    intercept[ConversionError] {
       string.get
     }
   }
 
-  "A config element that does not exist" should "fail with a KeyNotFoundException" in {
+  "A config element that does not exist" should "fail with a KeyNotFoundError" in {
     val confStr = "{int = 42}"
 
     val config: Try[Config] = Config.from(confStr)
@@ -433,7 +431,7 @@ class ConfigSpec extends UnitSpec {
 
     assert(int.isFailure)
 
-    intercept[KeyNotFoundException] {
+    intercept[KeyNotFoundError] {
       int.get
     }
   }

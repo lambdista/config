@@ -8,8 +8,6 @@ import scala.util.{Failure, Success, Try}
 
 import fastparse.all._
 
-import com.lambdista.config.exception.ConfigSyntaxException
-
 /**
   *
   *
@@ -141,9 +139,9 @@ object ConfigParser {
         result match {
           case map: AbstractMap => Success(Config(map))
           case _ =>
-            Failure(new ConfigSyntaxException("The whole configuration must be represented as a pseudo-json object"))
+            Failure(new ConfigSyntaxError("The whole configuration must be represented as a pseudo-json object"))
         }
-      case x: Parsed.Failure => Failure(new ConfigSyntaxException(x.msg))
+      case x: Parsed.Failure => Failure(new ConfigSyntaxError(x.msg))
     }
   }
 }

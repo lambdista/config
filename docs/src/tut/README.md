@@ -51,7 +51,7 @@ As a first step you need to add the resolver and dependency to your build file:
 ```scala
 resolvers += "lambdista at bintray" at "https://dl.bintray.com/lambdista/maven"
 
-libraryDependencies += "com.lambdista" %% "config" % "0.5.2"
+libraryDependencies += "com.lambdista" %% "config" % "0.5.3"
 ```
 
 Scala 2.12.x and 2.11.x are supported.
@@ -109,7 +109,7 @@ As you can see the result is a `Try[Config]`. Indeed you can get two types of er
 * The resource cannot be found.
 * The resource can be found but its parsing failed.
 
-In both cases you would get a `Failure` wrapping the appropriate exception.
+In both cases you would get a `Failure` wrapping the appropriate `Error` (a subclass of `Exception`).
 
 Once you have a `Config` object you can do two main things with it:
 
@@ -381,7 +381,7 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.5.2"
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.5.3"
 ```
 
 The example configuration is the following:

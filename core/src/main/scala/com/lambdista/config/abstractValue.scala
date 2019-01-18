@@ -4,7 +4,6 @@ package config
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
-import com.lambdista.config.exception.{ConversionException, KeyNotFoundException}
 import com.lambdista.util.syntax.std.option._
 
 /**
@@ -20,7 +19,7 @@ sealed trait AbstractValue {
     *
     * @return a `Try[A]`
     */
-  def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(this).toTry(new ConversionException(this))
+  def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(this).toTry(new ConversionError(this))
 
   /**
     * Description of this [[AbstractValue]].
@@ -71,7 +70,7 @@ final case class AbstractMap(value: Map[String, AbstractValue]) extends Abstract
     s"{$s}"
   }
 
-  def get(key: String): Try[AbstractValue] = value.get(key).toTry(new KeyNotFoundException(key))
+  def get(key: String): Try[AbstractValue] = value.get(key).toTry(new KeyNotFoundError(key))
 
   def transformKeys(f: PartialFunction[String, String]): AbstractMap =
     AbstractMap(value.map {

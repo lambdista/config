@@ -8,7 +8,7 @@ import scala.util.{Failure, Success, Try}
 
 import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueType, Config => TSConfig}
 
-import com.lambdista.config.exception.TypesafeConversionException
+import com.lambdista.config.exception.TypesafeConversionError
 import com.lambdista.util.sequence
 import com.lambdista.util.syntax.std.option._
 
@@ -30,7 +30,7 @@ object typesafe {
             case _ =>
               val className = implicitly[ClassTag[T]].runtimeClass.getName
               Failure(
-                new TypesafeConversionException(s"Could not convert $tsConfigValue to underlying type $className")
+                new TypesafeConversionError(s"Could not convert $tsConfigValue to underlying type $className")
               )
           }
         }
@@ -43,7 +43,7 @@ object typesafe {
 
           sequence(list)
             .map(AbstractList)
-            .toTry(new TypesafeConversionException(s"Could not convert $tsConfigList to a ConfigValue"))
+            .toTry(new TypesafeConversionError(s"Could not convert $tsConfigList to a ConfigValue"))
         }
 
         def convertConfigValue(tsConfigValue: ConfigValue): Try[AbstractValue] = {
@@ -55,7 +55,7 @@ object typesafe {
             case ConfigValueType.OBJECT  => convertConfigObject(tsConfigValue)
             case ConfigValueType.LIST    => convertConfigList(tsConfigValue.asInstanceOf[ConfigList])
 
-            case _ => Failure(new TypesafeConversionException(s"Could not convert $tsConfigValue to a ConfigValue"))
+            case _ => Failure(new TypesafeConversionError(s"Could not convert $tsConfigValue to a ConfigValue"))
           }
         }
 

@@ -3,7 +3,6 @@ package config
 
 import scala.util.{Failure, Success, Try}
 
-import com.lambdista.config.exception.{ConversionException, KeyNotFoundException}
 import com.lambdista.util.syntax.std.option._
 import scala.language.dynamics
 
@@ -36,7 +35,7 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     * }}}
     * @return a `Try[A]`, which is a `Success` if the conversion is successful, a `Failure` if it's not.
     */
-  def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(abstractMap).toTry(new ConversionException(abstractMap))
+  def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(abstractMap).toTry(new ConversionError(abstractMap))
 
   /**
     * Tries to retrieve a config value and convert it into a concrete Scala value. It may fail in one of two ways:
@@ -50,7 +49,7 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     */
   def getAs[A: ConcreteValue](key: String): Try[A] = {
     getValue(key).flatMap { x =>
-      ConcreteValue[A].apply(x).toTry(new ConversionException(x))
+      ConcreteValue[A].apply(x).toTry(new ConversionError(x))
     }
   }
 
@@ -169,7 +168,7 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
       if (key.exists(_ == '.'))
         getValueFromMultipleStrings(key.split("\\.").toList)
       else
-        Failure(new KeyNotFoundException(key))
+        Failure(new KeyNotFoundError(key))
 
     abstractMap.get(key) recoverWith {
       case _ => recoverer

@@ -51,7 +51,7 @@ As a first step you need to add the resolver and dependency to your build file:
 ```scala
 resolvers += "lambdista at bintray" at "https://dl.bintray.com/lambdista/maven"
 
-libraryDependencies += "com.lambdista" %% "config" % "0.5.3"
+libraryDependencies += "com.lambdista" %% "config" % "0.5.4"
 ```
 
 Scala 2.12.x and 2.11.x are supported.
@@ -381,7 +381,7 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.5.3"
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.5.4"
 ```
 
 The example configuration is the following:

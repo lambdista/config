@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
-import fastparse.all._
+import fastparse._, NoWhitespace._
 
 /**
   *
@@ -26,51 +26,51 @@ object ConfigParser {
   val IdentifierChars   = NamedFunction(!":=/#\" ".contains(_: Char), "IdentifierChars")
   val AnyCharButEndLine = NamedFunction(!"\r\n".contains(_: Char), "AnyCharButEndLine")
 
-  val spaces: Parser[Unit]                          = P(CharsWhile(Whitespace))
-  val optionalSpaces: Parser[Unit]                  = spaces.?
-  val anyCharButEndLine: Parser[Unit]               = P(CharsWhile(AnyCharButEndLine))
-  val anyCharButEndOfMultilineComment: Parser[Unit] = P(StringIn("/*")) ~ P(!StringIn("*/")) ~ P(StringIn("*/"))
+  def spaces[_: P]: P[Unit]                          = P(CharsWhile(Whitespace))
+  def optionalSpaces[_: P]: P[Unit]                  = spaces.?
+  def anyCharButEndLine[_: P]: P[Unit]               = P(CharsWhile(AnyCharButEndLine))
+  def anyCharButEndOfMultilineComment[_: P]: P[Unit] = P(StringIn("/*")) ~ P(!StringIn("*/")) ~ P(StringIn("*/"))
 
-  val singleLineComment: Parser[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
+  def singleLineComment[_: P]: P[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
 
-  val digits: Parser[Unit]                   = P(CharsWhile(Digits))
-  val exponent: Parser[Unit]                 = P(CharIn("eE") ~ CharIn("+-").? ~ digits)
-  val fractional: Parser[Unit]               = P("." ~ digits)
-  val integral: Parser[Unit]                 = P("0" | CharIn('1' to '9') ~ digits.?)
-  val number: Parser[Double]                 = P(CharIn("+-").? ~ integral ~ fractional.? ~ exponent.?).!.map(_.toDouble)
-  val abstractNumber: Parser[AbstractNumber] = number.map(AbstractNumber)
+  def digits[_: P]: P[Unit]                   = P(CharsWhile(Digits))
+  def exponent[_: P]: P[Unit]                 = P(CharIn("eE") ~ CharIn("+\\-").? ~ digits)
+  def fractional[_: P]: P[Unit]               = P("." ~ digits)
+  def integral[_: P]: P[Unit]                 = P("0" | CharIn("1-9") ~ digits.?)
+  def number[_: P]: P[Double]                 = P(CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.?).!.map(_.toDouble)
+  def abstractNumber[_: P]: P[AbstractNumber] = number.map(AbstractNumber)
 
-  val `null`: Parser[Unit]                    = P("null")
-  val abstractNone: Parser[AbstractNone.type] = `null`.map(_ => AbstractNone)
+  def `null`[_: P]: P[Unit]                    = P("null")
+  def abstractNone[_: P]: P[AbstractNone.type] = `null`.map(_ => AbstractNone)
 
-  val `true`: Parser[Boolean]            = P("true").map(_ => true)
-  val `false`: Parser[Boolean]           = P("false").map(_ => false)
-  val abstractBool: Parser[AbstractBool] = (`true` | `false`).map(AbstractBool)
+  def `true`[_: P]: P[Boolean]            = P("true").map(_ => true)
+  def `false`[_: P]: P[Boolean]           = P("false").map(_ => false)
+  def abstractBool[_: P]: P[AbstractBool] = (`true` | `false`).map(AbstractBool)
 
-  val hexDigit: Parser[Unit]      = P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
-  val unicodeEscape: Parser[Unit] = P("u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit)
-  val escape: Parser[Unit]        = P("\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape))
+  def hexDigit[_: P]: P[Unit]      = P(CharIn("0-9a-fA-F"))
+  def unicodeEscape[_: P]: P[Unit] = P("u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit)
+  def escape[_: P]                 = P("\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape))
 
-  val strChars: Parser[Unit] = P(CharsWhile(StringChars))
-  val idChars: Parser[Unit]  = P(CharsWhile(IdentifierChars))
+  def strChars[_: P]: P[Unit] = P(CharsWhile(StringChars))
+  def idChars[_: P]: P[Unit]  = P(CharsWhile(IdentifierChars))
 
-  val string: Parser[String] = P(optionalSpaces ~ "\"" ~/ (strChars | escape).rep.! ~ "\"")
+  def string[_: P]: P[String] = P(optionalSpaces ~ "\"" ~/ (strChars | escape).rep.! ~ "\"")
 
-  val abstractString: Parser[AbstractString] = string.map(AbstractString)
+  def abstractString[_: P]: P[AbstractString] = string.map(AbstractString)
 
-  val unquotedIdentifier: Parser[String] = P((idChars | escape).rep.!)
-  val quotedIdentifier: Parser[String]   = "\"" ~/ unquotedIdentifier ~ "\""
+  def unquotedIdentifier[_: P]: P[String] = P((idChars | escape).rep.!)
+  def quotedIdentifier[_: P]: P[String]   = "\"" ~/ unquotedIdentifier ~ "\""
 
-  val identifier: Parser[String] = P(optionalSpaces ~/ (quotedIdentifier | unquotedIdentifier))
+  def identifier[_: P]: P[String] = P(optionalSpaces ~/ (quotedIdentifier | unquotedIdentifier))
 
-  val array: Parser[Seq[AbstractValue]]  = P("[" ~/ jsonExpr.rep(sep = ",".~/) ~ optionalSpaces ~ "]")
-  val abstractList: Parser[AbstractList] = array.map(xs => AbstractList(xs.toList))
+  def array[_: P]: P[Seq[AbstractValue]]  = P("[" ~/ jsonExpr.rep(sep = ","./) ~ optionalSpaces ~ "]")
+  def abstractList[_: P]: P[AbstractList] = array.map(xs => AbstractList(xs.toList))
 
-  val pair: Parser[(String, AbstractValue)] = P(
-    singleLineComment.rep ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singleLineComment.rep)
+  def pair[_: P]: P[(String, AbstractValue)] =
+    P(singleLineComment.rep ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singleLineComment.rep)
 
-  val obj: Parser[Seq[(String, AbstractValue)]] = P("{" ~/ pair.rep(sep = ",".~/) ~ optionalSpaces ~ "}")
-  val abstractMap: Parser[AbstractMap]          = obj.map(x => AbstractMap(x.toMap))
+  def obj[_: P]: P[Seq[(String, AbstractValue)]] = P("{" ~/ pair.rep(sep = ","./) ~ optionalSpaces ~ "}")
+  def abstractMap[_: P]: P[AbstractMap]          = obj.map(x => AbstractMap(x.toMap))
 
   object DurationDecoder {
     def apply(value: Option[Double], unit: String): Duration = {
@@ -95,7 +95,8 @@ object ConfigParser {
       value.map(buildFinite).getOrElse(buildInfinite())
     }
   }
-  val validDuration = "days" | "day" | "d" |
+  def validDuration[_: P] =
+    "days" | "day" | "d" |
       "hours" | "hour" | "h" |
       "minutes" | "minute" | "min" |
       "seconds" | "second" | "secs" | "sec" | "s" |
@@ -103,11 +104,11 @@ object ConfigParser {
       "microseconds" | "microsecond" | "micros" | "µs" |
       "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns" |
       "Inf" | "MinusInf"
-  val duration: Parser[Duration] = P((number.! ~ spaces).? ~ validDuration.!).map {
+  def duration[_: P]: P[Duration] = P((number.! ~ spaces).? ~ validDuration.!).map {
     case (value, unit) =>
       DurationDecoder(value.map(_.toDouble), unit)
   }
-  val abstractDuration: Parser[AbstractDuration] = duration.map(AbstractDuration)
+  def abstractDuration[_: P]: P[AbstractDuration] = duration.map(AbstractDuration)
 
   def createRange(start: Int, method: String, end: Int, optStep: Option[Int]): Range = {
     val baseRange = method match {
@@ -117,24 +118,29 @@ object ConfigParser {
 
     optStep.map(step => baseRange by step).getOrElse(baseRange)
   }
-  val intRange: Parser[Range] =
-    P(integral.! ~ spaces ~ ("to" | "until").! ~ spaces ~ integral.! ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces).map {
+  def intRange[_: P]: P[Range] =
+    P(
+      integral.! ~ spaces ~ ("to" | "until").! ~ spaces ~ integral.! ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces
+    ).map {
       case (start, method, end, optStep) => createRange(start.toInt, method, end.toInt, optStep.map(_.toInt))
     }
-  val charRange: Parser[Range] =
-    P("'" ~ AnyChar.! ~ "'" ~ spaces ~ ("to" | "until").! ~ spaces ~ "'" ~ AnyChar.! ~ "'" ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces).map {
+  def charRange[_: P]: P[Range] =
+    P(
+      "'" ~ AnyChar.! ~ "'" ~ spaces ~ ("to" | "until").! ~ spaces ~ "'" ~ AnyChar.! ~ "'" ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces
+    ).map {
       case (start, method, end, optStep) => createRange(start.head.toInt, method, end.head.toInt, optStep.map(_.toInt))
     }
-  val range: Parser[Range]                 = intRange | charRange
-  val abstractRange: Parser[AbstractRange] = range.map(AbstractRange)
+  def range[_: P]: P[Range]                 = intRange | charRange
+  def abstractRange[_: P]: P[AbstractRange] = range.map(AbstractRange)
 
-  val jsonExpr: Parser[AbstractValue] = singleLineComment.rep ~ P(
+  def jsonExpr[_: P]: P[AbstractValue] =
+    singleLineComment.rep ~ P(
       optionalSpaces ~ (abstractMap | abstractList | abstractDuration | abstractRange |
         abstractString | abstractBool | abstractNone | abstractNumber) ~ optionalSpaces
     ) ~ singleLineComment.rep
 
   def parse(confStr: String): Try[Config] = {
-    jsonExpr.parse(confStr) match {
+    fastparse.parse(confStr, jsonExpr(_)) match {
       case Parsed.Success(result, _) =>
         result match {
           case map: AbstractMap => Success(Config(map))

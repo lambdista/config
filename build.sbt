@@ -14,12 +14,17 @@ lazy val commonSettings = Seq(
   scalacOptions := Seq(
     "-feature",
     "-language:higherKinds",
-    "-language:postfixOps",
     "-language:implicitConversions",
+    "-language:postfixOps",
+    "-Ypartial-unification",
     "-encoding",
     "utf8",
     "-deprecation",
-    "-unchecked"
+    "-unchecked",
+    "-Ywarn-unused-import",
+    "-Ywarn-unused",
+    "-Ywarn-dead-code",
+    "-Yno-adapted-args"
   ),
   scalafmtConfig := Some(file(".scalafmt.conf")),
   initialCommands in console :=

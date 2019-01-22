@@ -3,10 +3,10 @@ package com.lambdista.config
 /**
   * The base exception type for config errors.
   *
-  * @author Alessandro Lacava (@lambdista) 
+  * @author Alessandro Lacava (@lambdista)
   * @since 2019-01-18
   */
-sealed abstract class Error extends Exception {
+abstract class Error(message: String) extends Exception(message) {
   final override def fillInStackTrace(): Throwable = this
 }
 
@@ -18,9 +18,7 @@ sealed abstract class Error extends Exception {
   * @author Alessandro Lacava
   * @since 2019-01-18
   */
-final class ConfigSyntaxError(parseError: String) extends Error {
-  override def getMessage: String = parseError
-}
+final class ConfigSyntaxError(parseError: String) extends Error(parseError)
 
 /**
   * This error signals that a conversion from `abstractValue` to a [[ConcreteValue]] cannot be done.
@@ -29,9 +27,8 @@ final class ConfigSyntaxError(parseError: String) extends Error {
   * @author Alessandro Lacava
   * @since 2019-01-18
   */
-final class ConversionError(abstractValue: AbstractValue) extends Error {
-  override def getMessage: String = s"Could not convert ${abstractValue.describe} to the type requested"
-}
+final class ConversionError(abstractValue: AbstractValue)
+    extends Error(s"Could not convert ${abstractValue.describe} to the type requested")
 
 /**
   * This error signals that a given key cannot be found in the configuration.
@@ -41,6 +38,4 @@ final class ConversionError(abstractValue: AbstractValue) extends Error {
   * @author Alessandro Lacava
   * @since 2019-01-18
   */
-final class KeyNotFoundError(name: String) extends Error {
-  override def getMessage: String = s"No such key: $name"
-}
+final class KeyNotFoundError(name: String) extends Error(s"No such key: $name")

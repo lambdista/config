@@ -20,59 +20,58 @@ object ConfigParser {
     override def toString()  = name
   }
 
-  val Whitespace        = NamedFunction(" \r\n".contains(_: Char), "Whitespace")
-  val Digits            = NamedFunction('0' to '9' contains (_: Char), "Digits")
-  val StringChars       = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
-  val IdentifierChars   = NamedFunction(!":=/#\" ".contains(_: Char), "IdentifierChars")
-  val AnyCharButEndLine = NamedFunction(!"\r\n".contains(_: Char), "AnyCharButEndLine")
+  private val Whitespace        = NamedFunction(" \r\n".contains(_: Char), "Whitespace")
+  private val Digits            = NamedFunction('0' to '9' contains (_: Char), "Digits")
+  private val StringChars       = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
+  private val IdentifierChars   = NamedFunction(!":=/#\" ".contains(_: Char), "IdentifierChars")
+  private val AnyCharButEndLine = NamedFunction(!"\r\n".contains(_: Char), "AnyCharButEndLine")
 
-  def spaces[_: P]: P[Unit]                          = P(CharsWhile(Whitespace))
-  def optionalSpaces[_: P]: P[Unit]                  = spaces.?
-  def anyCharButEndLine[_: P]: P[Unit]               = P(CharsWhile(AnyCharButEndLine))
-  def anyCharButEndOfMultilineComment[_: P]: P[Unit] = P(StringIn("/*")) ~ P(!StringIn("*/")) ~ P(StringIn("*/"))
+  private def spaces[_: P]: P[Unit]            = P(CharsWhile(Whitespace))
+  private def optionalSpaces[_: P]: P[Unit]    = spaces.?
+  private def anyCharButEndLine[_: P]: P[Unit] = P(CharsWhile(AnyCharButEndLine))
 
-  def singleLineComment[_: P]: P[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
+  private def singleLineComment[_: P]: P[Unit] = P(optionalSpaces ~ ("#" | "//") ~ anyCharButEndLine.rep ~ spaces)
 
-  def digits[_: P]: P[Unit]                   = P(CharsWhile(Digits))
-  def exponent[_: P]: P[Unit]                 = P(CharIn("eE") ~ CharIn("+\\-").? ~ digits)
-  def fractional[_: P]: P[Unit]               = P("." ~ digits)
-  def integral[_: P]: P[Unit]                 = P("0" | CharIn("1-9") ~ digits.?)
-  def number[_: P]: P[Double]                 = P(CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.?).!.map(_.toDouble)
-  def abstractNumber[_: P]: P[AbstractNumber] = number.map(AbstractNumber)
+  private def digits[_: P]: P[Unit]                   = P(CharsWhile(Digits))
+  private def exponent[_: P]: P[Unit]                 = P(CharIn("eE") ~ CharIn("+\\-").? ~ digits)
+  private def fractional[_: P]: P[Unit]               = P("." ~ digits)
+  private def integral[_: P]: P[Unit]                 = P("0" | CharIn("1-9") ~ digits.?)
+  private def number[_: P]: P[Double]                 = P(CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.?).!.map(_.toDouble)
+  private def abstractNumber[_: P]: P[AbstractNumber] = number.map(AbstractNumber)
 
-  def `null`[_: P]: P[Unit]                    = P("null")
-  def abstractNone[_: P]: P[AbstractNone.type] = `null`.map(_ => AbstractNone)
+  private def `null`[_: P]: P[Unit]                    = P("null")
+  private def abstractNone[_: P]: P[AbstractNone.type] = `null`.map(_ => AbstractNone)
 
-  def `true`[_: P]: P[Boolean]            = P("true").map(_ => true)
-  def `false`[_: P]: P[Boolean]           = P("false").map(_ => false)
-  def abstractBool[_: P]: P[AbstractBool] = (`true` | `false`).map(AbstractBool)
+  private def `true`[_: P]: P[Boolean]            = P("true").map(_ => true)
+  private def `false`[_: P]: P[Boolean]           = P("false").map(_ => false)
+  private def abstractBool[_: P]: P[AbstractBool] = (`true` | `false`).map(AbstractBool)
 
-  def hexDigit[_: P]: P[Unit]      = P(CharIn("0-9a-fA-F"))
-  def unicodeEscape[_: P]: P[Unit] = P("u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit)
-  def escape[_: P]                 = P("\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape))
+  private def hexDigit[_: P]: P[Unit]      = P(CharIn("0-9a-fA-F"))
+  private def unicodeEscape[_: P]: P[Unit] = P("u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit)
+  private def escape[_: P]                 = P("\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape))
 
-  def strChars[_: P]: P[Unit] = P(CharsWhile(StringChars))
-  def idChars[_: P]: P[Unit]  = P(CharsWhile(IdentifierChars))
+  private def strChars[_: P]: P[Unit] = P(CharsWhile(StringChars))
+  private def idChars[_: P]: P[Unit]  = P(CharsWhile(IdentifierChars))
 
-  def string[_: P]: P[String] = P(optionalSpaces ~ "\"" ~/ (strChars | escape).rep.! ~ "\"")
+  private def string[_: P]: P[String] = P(optionalSpaces ~ "\"" ~/ (strChars | escape).rep.! ~ "\"")
 
-  def abstractString[_: P]: P[AbstractString] = string.map(AbstractString)
+  private def abstractString[_: P]: P[AbstractString] = string.map(AbstractString)
 
-  def unquotedIdentifier[_: P]: P[String] = P((idChars | escape).rep.!)
-  def quotedIdentifier[_: P]: P[String]   = "\"" ~/ unquotedIdentifier ~ "\""
+  private def unquotedIdentifier[_: P]: P[String] = P((idChars | escape).rep.!)
+  private def quotedIdentifier[_: P]: P[String]   = "\"" ~/ unquotedIdentifier ~ "\""
 
-  def identifier[_: P]: P[String] = P(optionalSpaces ~/ (quotedIdentifier | unquotedIdentifier))
+  private def identifier[_: P]: P[String] = P(optionalSpaces ~/ (quotedIdentifier | unquotedIdentifier))
 
-  def array[_: P]: P[Seq[AbstractValue]]  = P("[" ~/ jsonExpr.rep(sep = ","./) ~ optionalSpaces ~ "]")
-  def abstractList[_: P]: P[AbstractList] = array.map(xs => AbstractList(xs.toList))
+  private def array[_: P]: P[Seq[AbstractValue]]  = P("[" ~/ jsonExpr.rep(sep = ","./) ~ optionalSpaces ~ "]")
+  private def abstractList[_: P]: P[AbstractList] = array.map(xs => AbstractList(xs.toList))
 
-  def pair[_: P]: P[(String, AbstractValue)] =
+  private def pair[_: P]: P[(String, AbstractValue)] =
     P(singleLineComment.rep ~ identifier ~ optionalSpaces ~ (":" | "=") ~ jsonExpr ~ singleLineComment.rep)
 
-  def obj[_: P]: P[Seq[(String, AbstractValue)]] = P("{" ~/ pair.rep(sep = ","./) ~ optionalSpaces ~ "}")
-  def abstractMap[_: P]: P[AbstractMap]          = obj.map(x => AbstractMap(x.toMap))
+  private def obj[_: P]: P[Seq[(String, AbstractValue)]] = P("{" ~/ pair.rep(sep = ","./) ~ optionalSpaces ~ "}")
+  private def abstractMap[_: P]: P[AbstractMap]          = obj.map(x => AbstractMap(x.toMap))
 
-  object DurationDecoder {
+  private object DurationDecoder {
     def apply(value: Option[Double], unit: String): Duration = {
       def buildFinite(v: Double): Duration = {
         val timeUnit: TimeUnit = unit match {
@@ -95,7 +94,7 @@ object ConfigParser {
       value.map(buildFinite).getOrElse(buildInfinite())
     }
   }
-  def validDuration[_: P] =
+  private def validDuration[_: P] =
     "days" | "day" | "d" |
       "hours" | "hour" | "h" |
       "minutes" | "minute" | "min" |
@@ -104,13 +103,13 @@ object ConfigParser {
       "microseconds" | "microsecond" | "micros" | "µs" |
       "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns" |
       "Inf" | "MinusInf"
-  def duration[_: P]: P[Duration] = P((number.! ~ spaces).? ~ validDuration.!).map {
+  private def duration[_: P]: P[Duration] = P((number.! ~ spaces).? ~ validDuration.!).map {
     case (value, unit) =>
       DurationDecoder(value.map(_.toDouble), unit)
   }
-  def abstractDuration[_: P]: P[AbstractDuration] = duration.map(AbstractDuration)
+  private def abstractDuration[_: P]: P[AbstractDuration] = duration.map(AbstractDuration)
 
-  def createRange(start: Int, method: String, end: Int, optStep: Option[Int]): Range = {
+  private def createRange(start: Int, method: String, end: Int, optStep: Option[Int]): Range = {
     val baseRange = method match {
       case "to"    => start to end
       case "until" => start until end
@@ -118,22 +117,22 @@ object ConfigParser {
 
     optStep.map(step => baseRange by step).getOrElse(baseRange)
   }
-  def intRange[_: P]: P[Range] =
+  private def intRange[_: P]: P[Range] =
     P(
       integral.! ~ spaces ~ ("to" | "until").! ~ spaces ~ integral.! ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces
     ).map {
       case (start, method, end, optStep) => createRange(start.toInt, method, end.toInt, optStep.map(_.toInt))
     }
-  def charRange[_: P]: P[Range] =
+  private def charRange[_: P]: P[Range] =
     P(
       "'" ~ AnyChar.! ~ "'" ~ spaces ~ ("to" | "until").! ~ spaces ~ "'" ~ AnyChar.! ~ "'" ~ (spaces ~ "by" ~ spaces ~ integral.!).? ~ optionalSpaces
     ).map {
       case (start, method, end, optStep) => createRange(start.head.toInt, method, end.head.toInt, optStep.map(_.toInt))
     }
-  def range[_: P]: P[Range]                 = intRange | charRange
-  def abstractRange[_: P]: P[AbstractRange] = range.map(AbstractRange)
+  private def range[_: P]: P[Range]                 = intRange | charRange
+  private def abstractRange[_: P]: P[AbstractRange] = range.map(AbstractRange)
 
-  def jsonExpr[_: P]: P[AbstractValue] =
+  private def jsonExpr[_: P]: P[AbstractValue] =
     singleLineComment.rep ~ P(
       optionalSpaces ~ (abstractMap | abstractList | abstractDuration | abstractRange |
         abstractString | abstractBool | abstractNone | abstractNumber) ~ optionalSpaces

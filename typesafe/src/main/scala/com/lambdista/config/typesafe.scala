@@ -8,7 +8,6 @@ import scala.util.{Failure, Success, Try}
 
 import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueType, Config => TSConfig}
 
-import com.lambdista.config.exception.TypesafeConversionError
 import com.lambdista.util.sequence
 import com.lambdista.util.syntax.std.option._
 

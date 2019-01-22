@@ -107,7 +107,7 @@ object ConcreteValue {
     new ConcreteValue[Option[A]] {
       override def apply(abstractValue: AbstractValue): Option[Option[A]] =
         abstractValue match {
-          case x: AbstractNone.type => Some(None)
+          case _: AbstractNone.type => Some(None)
           case x                    => Some(A.apply(x))
         }
     }

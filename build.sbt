@@ -2,30 +2,46 @@ import Dependencies._
 
 lazy val projectName = "config"
 
-lazy val projectScalaVersion = "2.12.8"
+lazy val projectScalaVersion = "2.13.0-RC1"
 
 lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
-  version := "0.5.4",
-  crossScalaVersions := Seq(projectScalaVersion, "2.11.12"),
+  version := "0.5.5-RC1",
+  // crossScalaVersions := Seq(projectScalaVersion, "2.11.12", "2.12.8"),
+  scalacOptions := (CrossVersion.partialVersion(projectScalaVersion) match {
+    case Some((2, 13)) =>
+      Seq(
+        "-feature",
+        "-language:higherKinds",
+        "-language:implicitConversions",
+        "-language:postfixOps",
+        "-encoding",
+        "utf8",
+        "-deprecation",
+        "-unchecked",
+        "-Ywarn-unused",
+        "-Ywarn-dead-code"
+      )
+    case _ =>
+      Seq(
+        "-feature",
+        "-language:higherKinds",
+        "-language:implicitConversions",
+        "-language:postfixOps",
+        "-Ypartial-unification",
+        "-encoding",
+        "utf8",
+        "-deprecation",
+        "-unchecked",
+        "-Ywarn-unused-import",
+        "-Ywarn-unused",
+        "-Ywarn-dead-code",
+        "-Yno-adapted-args"
+      )
+  }),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  scalacOptions := Seq(
-    "-feature",
-    "-language:higherKinds",
-    "-language:implicitConversions",
-    "-language:postfixOps",
-    "-Ypartial-unification",
-    "-encoding",
-    "utf8",
-    "-deprecation",
-    "-unchecked",
-    "-Ywarn-unused-import",
-    "-Ywarn-unused",
-    "-Ywarn-dead-code",
-    "-Yno-adapted-args"
-  ),
   scalafmtConfig := Some(file(".scalafmt.conf")),
   initialCommands in console :=
     """

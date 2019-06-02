@@ -1,28 +1,35 @@
 package com.lambdista
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.BuildFrom
 
 /**
   * Utility methods.
   *
   * @author Alessandro Lacava
-  * @since 2015-11-27
+  * @author Giuseppe Cannella
+  * @since 2019-06-02
   */
 package object util {
-  def traverse[A, B, M[X] <: TraversableOnce[X]](
+
+  def traverse1[A, B, M[X] <: TraversableOnce[X]](
     ms: M[Option[A]]
-  )(f: A => B)(implicit cbf: CanBuildFrom[M[A], B, M[B]]): Option[M[B]] = {
-    val builder = cbf()
+  )(f: A => B)(implicit cbf: BuildFrom[M[Option[A]], B, M[B]]): Option[M[B]] = {
+
+    val builder = cbf.newBuilder(ms)
     builder.sizeHint(ms.size)
 
     if (ms.exists(_.isEmpty)) None
     else {
-      ms foreach (x => builder += f(x.get))
-      Some(builder.result)
+      ms foreach { x =>
+        val t = f(x.get)
+        builder += t
+      }
+      val x = builder.result
+      Some(x)
     }
   }
 
   def sequence[A, M[X] <: TraversableOnce[X]](ms: M[Option[A]])(
-    implicit cbf: CanBuildFrom[M[A], A, M[A]]
-  ): Option[M[A]] = traverse(ms)(identity)
+    implicit cbf: BuildFrom[M[Option[A]], A, M[A]]
+  ): Option[M[A]] = traverse1(ms)(identity)
 }

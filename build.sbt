@@ -2,17 +2,14 @@ import Dependencies._
 
 lazy val projectName = "config"
 
-lazy val projectScalaVersion = "2.13.0-RC1"
+lazy val projectScalaVersion = "2.13.0"
 
 lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
-  version := "0.5.5-RC1",
-  // crossScalaVersions := Seq(projectScalaVersion, "2.11.12", "2.12.8"),
-  scalacOptions := (CrossVersion.partialVersion(projectScalaVersion) match {
-    case Some((2, 13)) =>
-      Seq(
+  version := "0.5.5",  
+  scalacOptions := Seq(
         "-feature",
         "-language:higherKinds",
         "-language:implicitConversions",
@@ -23,24 +20,7 @@ lazy val commonSettings = Seq(
         "-unchecked",
         "-Ywarn-unused",
         "-Ywarn-dead-code"
-      )
-    case _ =>
-      Seq(
-        "-feature",
-        "-language:higherKinds",
-        "-language:implicitConversions",
-        "-language:postfixOps",
-        "-Ypartial-unification",
-        "-encoding",
-        "utf8",
-        "-deprecation",
-        "-unchecked",
-        "-Ywarn-unused-import",
-        "-Ywarn-unused",
-        "-Ywarn-dead-code",
-        "-Yno-adapted-args"
-      )
-  }),
+      ),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalafmtConfig := Some(file(".scalafmt.conf")),
   initialCommands in console :=

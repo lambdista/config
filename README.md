@@ -383,7 +383,7 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.5.4"
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.6.0"
 ```
 
 The example configuration is the following:

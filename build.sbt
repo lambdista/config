@@ -9,37 +9,38 @@ lazy val commonSettings = Seq(
   version := "0.6.0",
   crossScalaVersions := Seq(projectScalaVersion, "2.12.8", "2.11.12"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  scalacOptions := (CrossVersion.partialVersion(projectScalaVersion) match {
-    case Some((2, 13)) =>
-      Seq(
-        "-feature",
-        "-language:higherKinds",
-        "-language:implicitConversions",
-        "-language:postfixOps",
-        "-encoding",
-        "utf8",
-        "-deprecation",
-        "-unchecked",
-        "-Ywarn-unused",
-        "-Ywarn-dead-code"
-      )
-    case _ =>
-      Seq(
-        "-feature",
-        "-language:higherKinds",
-        "-language:implicitConversions",
-        "-language:postfixOps",
-        "-Ypartial-unification",
-        "-encoding",
-        "utf8",
-        "-deprecation",
-        "-unchecked",
-        "-Ywarn-unused-import",
-        "-Ywarn-unused",
-        "-Ywarn-dead-code",
-        "-Yno-adapted-args"
-      )
-  }),
+  scalacOptions :=
+    (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) =>
+        Seq(
+          "-feature",
+          "-language:higherKinds",
+          "-language:implicitConversions",
+          "-language:postfixOps",
+          "-encoding",
+          "utf8",
+          "-deprecation",
+          "-unchecked",
+          "-Ywarn-unused",
+          "-Ywarn-dead-code"
+        )
+      case _ =>
+        Seq(
+          "-feature",
+          "-language:higherKinds",
+          "-language:implicitConversions",
+          "-language:postfixOps",
+          "-Ypartial-unification",
+          "-encoding",
+          "utf8",
+          "-deprecation",
+          "-unchecked",
+          "-Ywarn-unused-import",
+          "-Ywarn-unused",
+          "-Ywarn-dead-code",
+          "-Yno-adapted-args"
+        )
+    }),
   scalafmtConfig := Some(file(".scalafmt.conf")),
   initialCommands in console :=
     """
@@ -65,7 +66,14 @@ lazy val config = (project in file("."))
 
 lazy val core = (project in file("core"))
   .settings(commonSettings)
-  .settings(moduleName := projectName, libraryDependencies ++= coreDeps, dependencyOverrides += shapeless)
+  .settings(
+    moduleName := projectName,
+    libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) | Some((2, 12)) => coreDeps
+      case _                             => coreDeps2_11
+    }),
+    dependencyOverrides += shapeless
+  )
 
 lazy val typesafe = (project in file("typesafe"))
   .dependsOn(core % "compile->compile;test->test")

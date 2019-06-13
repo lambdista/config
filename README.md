@@ -53,10 +53,10 @@ As a first step you need to add the resolver and dependency to your build file:
 ```scala
 resolvers += "lambdista at bintray" at "https://dl.bintray.com/lambdista/maven"
 
-libraryDependencies += "com.lambdista" %% "config" % "0.5.4"
+libraryDependencies += "com.lambdista" %% "config" % "0.6.0"
 ```
 
-Scala 2.12.x and 2.11.x are supported.
+Scala 2.13.x, 2.12.x and 2.11.x are supported.
 
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 

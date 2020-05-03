@@ -37,8 +37,9 @@ object ConfigLoader {
 
   implicit val sourceLoader = new ConfigLoader[Source] {
     override def load(resource: Source): Try[Config] = {
-      val lines = try resource.mkString
-      finally resource.close()
+      val lines =
+        try resource.mkString
+        finally resource.close()
 
       ConfigLoader[String].load(lines)
     }

@@ -13,6 +13,7 @@ import scala.language.dynamics
   * @since 2015-11-27
   */
 final case class Config(abstractMap: AbstractMap) extends Dynamic {
+
   /**
     * Tries to convert the configuration to a type for which exists an instance of
     * [[ConcreteValue]] in scope. Since the configuration is represented as a [[AbstractMap]], `A` is generally a final case class or,

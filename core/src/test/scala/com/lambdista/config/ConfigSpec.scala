@@ -470,8 +470,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   it should "support single-line comments repeated multiple times" in {
-    val result: Try[Config] = ConfigParser.parse(
-      """
+    val result: Try[Config] = ConfigParser.parse("""
         |// comment 1
         |# comment 2
         |// comment 3
@@ -501,12 +500,77 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin)
 
-    val conf = result.flatMap(_.as[Map[String, AbstractValue]])
+    val conf: Try[Map[String, AbstractValue]] = result.flatMap(_.as[Map[String, AbstractValue]])
 
     conf.foreach(println)
 
     assert(result.isSuccess)
     assert(conf.isSuccess)
+  }
+
+  "A sealed trait" should "be valid to use in config" in {
+    sealed trait Foo
+    final case class Bar(a: Int, b: String) extends Foo
+    final case class Baz(x: Boolean)        extends Foo
+
+    val barCfg: String =
+      """
+        |{
+        |  a: 42,
+        |  b: "hello"
+        |}
+        |""".stripMargin
+
+    val bazCfg: String =
+      """
+        |{
+        |  x: true
+        |}
+        |""".stripMargin
+
+    val barC: Try[Config] = Config.from(barCfg)
+    val bazC: Try[Config] = Config.from(bazCfg)
+
+    val barFoo: Try[Foo] = barC.flatMap(_.as[Foo])
+    val bazFoo: Try[Foo] = bazC.flatMap(_.as[Foo])
+
+    barFoo.foreach(println)
+    bazFoo.foreach(println)
+
+    assert(barFoo.isSuccess)
+    assert(bazFoo.isSuccess)
+  }
+
+  "A custom ConcreteValue instances" should "work correctly" in {
+    final case class RawString(s: String)
+    object RawString {
+      def from(s: String): RawString = {
+        RawString(s.replace("\\\"", "\""))
+      }
+
+      implicit val concreteValue: ConcreteValue[RawString] = new ConcreteValue[RawString] {
+        override def apply(abstractValue: AbstractValue): Option[RawString] = {
+          abstractValue match {
+            case AbstractString(value) => Some(RawString.from(value))
+            case _                     => None
+          }
+        }
+      }
+    }
+
+    val confStr             = """{
+                    |  bar = "a\"b"
+                    |}""".stripMargin
+    val config: Try[Config] = Config.from(confStr)
+    final case class FooConfig(bar: RawString)
+
+    val fooConfig: Try[FooConfig] = for {
+      conf   <- config
+      result <- conf.as[FooConfig]
+    } yield result
+
+    val ff: RawString = fooConfig.get.bar
+    assert(ff.s.length == 3)
   }
 
   "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {

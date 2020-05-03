@@ -3,7 +3,7 @@ package com.lambdista
 /**
   *
   *
-  * @author Alessandro Lacava (@lambdista) 
+  * @author Alessandro Lacava (@lambdista)
   * @since 2019-06-12
   */
 package object util {

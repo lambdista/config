@@ -31,38 +31,39 @@ trait ConfigLoader[R] {
 object ConfigLoader {
   def apply[R: ConfigLoader]: ConfigLoader[R] = implicitly[ConfigLoader[R]]
 
-  implicit val stringLoader = new ConfigLoader[String] {
+  implicit val stringLoader: ConfigLoader[String] = new ConfigLoader[String] {
     override def load(resource: String): Try[Config] = ConfigParser.parse(resource)
   }
 
-  implicit val sourceLoader = new ConfigLoader[Source] {
+  implicit val sourceLoader: ConfigLoader[Source] = new ConfigLoader[Source] {
     override def load(resource: Source): Try[Config] = {
-      val lines = try resource.mkString
-      finally resource.close()
+      val lines =
+        try resource.mkString
+        finally resource.close()
 
       ConfigLoader[String].load(lines)
     }
   }
 
-  implicit val fileLoader = new ConfigLoader[File] {
+  implicit val fileLoader: ConfigLoader[File] = new ConfigLoader[File] {
     override def load(resource: File): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
   }
 
-  implicit val pathLoader = new ConfigLoader[Path] {
+  implicit val pathLoader: ConfigLoader[Path] = new ConfigLoader[Path] {
     override def load(resource: Path): Try[Config] =
       Try(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
   }
 
-  implicit val inputStreamLoader = new ConfigLoader[InputStream] {
+  implicit val inputStreamLoader: ConfigLoader[InputStream] = new ConfigLoader[InputStream] {
     override def load(resource: InputStream): Try[Config] =
       Try(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
   }
 
-  implicit val uriLoader = new ConfigLoader[URI] {
+  implicit val uriLoader: ConfigLoader[URI] = new ConfigLoader[URI] {
     override def load(resource: URI): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
   }
 
-  implicit val urlLoader = new ConfigLoader[URL] {
+  implicit val urlLoader: ConfigLoader[URL] = new ConfigLoader[URL] {
     override def load(resource: URL): Try[Config] = Try(Source.fromURL(resource)).flatMap(ConfigLoader[Source].load)
   }
 }

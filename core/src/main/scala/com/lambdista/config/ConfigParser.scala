@@ -6,7 +6,8 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
-import fastparse._, NoWhitespace._
+import fastparse.NoWhitespace._
+import fastparse._
 
 /**
   *

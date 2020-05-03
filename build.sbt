@@ -7,7 +7,7 @@ lazy val commonSettings = Seq(
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
   version := "0.6.0",
-  crossScalaVersions := Seq(projectScalaVersion, "2.12.8", "2.11.12"),
+  crossScalaVersions := Seq(projectScalaVersion, "2.12.10", "2.11.12"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions :=
     (CrossVersion.partialVersion(scalaVersion.value) match {
@@ -17,6 +17,7 @@ lazy val commonSettings = Seq(
           "-language:higherKinds",
           "-language:implicitConversions",
           "-language:postfixOps",
+          "-language:experimental.macros",
           "-encoding",
           "utf8",
           "-deprecation",
@@ -30,6 +31,7 @@ lazy val commonSettings = Seq(
           "-language:higherKinds",
           "-language:implicitConversions",
           "-language:postfixOps",
+          "-language:experimental.macros",
           "-Ypartial-unification",
           "-encoding",
           "utf8",
@@ -41,7 +43,7 @@ lazy val commonSettings = Seq(
           "-Yno-adapted-args"
         )
     }),
-  scalafmtConfig := Some(file(".scalafmt.conf")),
+  scalafmtOnCompile := true,
   initialCommands in console :=
     """
       |import scala.util._
@@ -71,8 +73,7 @@ lazy val core = (project in file("core"))
     libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) | Some((2, 12)) => coreDeps
       case _                             => coreDeps2_11
-    }),
-    dependencyOverrides += shapeless
+    })
   )
 
 lazy val typesafe = (project in file("typesafe"))

@@ -1,14 +1,11 @@
 package com.lambdista
 package config
 
-import scala.annotation.tailrec
+import scala.annotation.{implicitNotFound, tailrec}
 import scala.concurrent.duration.Duration
-import scala.annotation.implicitNotFound
-
-import shapeless.labelled.{FieldType, field}
-import shapeless.{:: => :*:, _}
 
 import com.lambdista.util._
+import magnolia._
 
 /**
   * Type class used to convert an [[AbstractValue]] into a concrete Scala value.
@@ -90,14 +87,14 @@ object ConcreteValue {
 
   implicit val durationValue: ConcreteValue[Duration] =
     new ConcreteValue[Duration] {
-      def apply(abstractValue: AbstractValue) = abstractValue match {
+      def apply(abstractValue: AbstractValue): Option[Duration] = abstractValue match {
         case AbstractDuration(d) => Some(d)
         case _                   => None
       }
     }
 
   implicit val rangeValue: ConcreteValue[Range] = new ConcreteValue[Range] {
-    def apply(abstractValue: AbstractValue) = abstractValue match {
+    def apply(abstractValue: AbstractValue): Option[Range] = abstractValue match {
       case AbstractRange(r) => Some(r)
       case _                => None
     }
@@ -136,7 +133,7 @@ object ConcreteValue {
     }
 
   implicit def mapValue[A](implicit A: ConcreteValue[A]): ConcreteValue[Map[String, A]] = {
-    def traverseMap[A](m: Map[String, Option[A]]): Option[Map[String, A]] = {
+    def traverseMap(m: Map[String, Option[A]]): Option[Map[String, A]] = {
       @tailrec
       def go(xs: List[(String, Option[A])], acc: Map[String, A]): Option[Map[String, A]] = xs match {
         case a :: as =>
@@ -151,89 +148,40 @@ object ConcreteValue {
     }
 
     new ConcreteValue[Map[String, A]] {
-      def apply(v: AbstractValue) = v.as[AbstractMap].toOption.flatMap { cm =>
+      def apply(v: AbstractValue): Option[Map[String, A]] = v.as[AbstractMap].toOption.flatMap { cm =>
         traverseMap(cm.value.map { case (key, value) => key -> A.apply(value) })
       }
     }
   }
 
-  implicit def genericValue[A, R <: HList](
-    implicit gen: LabelledGeneric.Aux[A, R],
-    fromMap: Lazy[FromMap[R]]
-  ): ConcreteValue[A] = new ConcreteValue[A] {
-    override def apply(abstractValue: AbstractValue): Option[A] =
-      abstractValue.as[AbstractMap].toOption.flatMap(x => fromMap.value(x.value).map(gen.from))
-  }
+  type Typeclass[A] = ConcreteValue[A]
 
-  trait FromMap[L <: HList] {
-    def apply(m: Map[String, AbstractValue]): Option[L]
-  }
-
-  trait LowPriorityFromMap extends LowPriorityFromMap0 {
-    implicit def hconsFromMap12[K <: Symbol, V, T <: HList](
-      implicit witness: Witness.Aux[K],
-      concreteValue: ConcreteValue[V],
-      fromMapT: Lazy[FromMap[T]],
-      ev: V <:< Option[_]
-    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap1(Some(AbstractNone))
-  }
-
-  trait LowPriorityFromMap0 {
-    implicit def hconsFromMap11[K <: Symbol, V, T <: HList](
-      implicit witness: Witness.Aux[K],
-      concreteValue: ConcreteValue[V],
-      fromMapT: Lazy[FromMap[T]]
-    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap1(None)
-  }
-
-  private def hconsFromMap1[K <: Symbol, V, T <: HList](default: => Option[AbstractValue])(
-    implicit witness: Witness.Aux[K],
-    concreteValue: ConcreteValue[V],
-    fromMapT: Lazy[FromMap[T]]
-  ): FromMap[FieldType[K, V] :*: T] =
-    new FromMap[FieldType[K, V] :*: T] {
-      def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
-        for {
-          v <- m.get(witness.value.name) orElse default
-          h <- concreteValue.apply(v)
-          t <- fromMapT.value(m)
-        } yield field[K](h) :: t
-    }
-
-  object FromMap extends LowPriorityFromMap {
-    implicit val hnilFromMap: FromMap[HNil] = new FromMap[HNil] {
-      def apply(m: Map[String, AbstractValue]): Option[HNil] = Some(HNil)
-    }
-
-    implicit def hconsFromMap01[K <: Symbol, V, R <: HList, T <: HList](
-      implicit witness: Witness.Aux[K],
-      gen: LabelledGeneric.Aux[V, R],
-      fromMapH: Lazy[FromMap[R]],
-      fromMapT: FromMap[T]
-    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap0(None)
-
-    implicit def hconsFromMap02[K <: Symbol, V, R <: HList, T <: HList](
-      implicit witness: Witness.Aux[K],
-      gen: LabelledGeneric.Aux[V, R],
-      fromMapH: Lazy[FromMap[R]],
-      fromMapT: FromMap[T],
-      ev: V <:< Option[_]
-    ): FromMap[FieldType[K, V] :*: T] = hconsFromMap0(Some(AbstractNone))
-
-    private def hconsFromMap0[K <: Symbol, V, R <: HList, T <: HList](default: => Option[AbstractValue])(
-      implicit witness: Witness.Aux[K],
-      gen: LabelledGeneric.Aux[V, R],
-      fromMapH: Lazy[FromMap[R]],
-      fromMapT: FromMap[T]
-    ): FromMap[FieldType[K, V] :*: T] =
-      new FromMap[FieldType[K, V] :*: T] {
-        def apply(m: Map[String, AbstractValue]): Option[FieldType[K, V] :*: T] =
-          for {
-            v <- m.get(witness.value.name) orElse default
-            r <- v.as[Map[String, AbstractValue]].toOption
-            h <- fromMapH.value(r)
-            t <- fromMapT(m)
-          } yield field[K](gen.from(h)) :: t
+  def combine[A](ctx: CaseClass[Typeclass, A]): ConcreteValue[A] = new ConcreteValue[A] {
+    override def apply(abstractValue: AbstractValue): Option[A] = {
+      def decodeMap(m: Map[String, AbstractValue]): Option[A] = {
+        val res: Either[List[Throwable], A] = ctx.constructEither { p =>
+          val v: AbstractValue = m.getOrElse(p.label, AbstractNone)
+          p.typeclass.apply(v).map(Right(_)).getOrElse(Left(new ConversionError(v)))
+        }
+        res.toOption
       }
+
+      abstractValue match {
+        case AbstractMap(m) => decodeMap(m)
+        case _              => None
+      }
+    }
   }
+
+  def dispatch[A](ctx: SealedTrait[Typeclass, A]): ConcreteValue[A] = new ConcreteValue[A] {
+    override def apply(abstractValue: AbstractValue): Option[A] = {
+      def applyToSub(s: Subtype[Typeclass, A]): Option[A] = s.typeclass.apply(abstractValue)
+
+      ctx.subtypes.collectFirst {
+        case x if applyToSub(x).isDefined => applyToSub(x).get
+      }
+    }
+  }
+
+  implicit def gen[A]: Typeclass[A] = macro Magnolia.gen[A]
 }

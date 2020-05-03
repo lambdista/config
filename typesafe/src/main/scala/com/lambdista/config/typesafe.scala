@@ -1,17 +1,16 @@
 package com.lambdista
 package config
 
+import java.lang.{Boolean => JBoolean}
+
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueType, Config => TSConfig}
-
 import com.lambdista.util.sequence
 import com.lambdista.util.syntax.std.option._
-
-import java.lang.{Boolean => JBoolean}
+import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueType, Config => TSConfig}
 
 /**
   * Adapter apt to load Typesafe Config.
@@ -20,7 +19,7 @@ import java.lang.{Boolean => JBoolean}
   * @since 2016-01-07
   */
 object typesafe {
-  implicit val tsConfigLoader = new ConfigLoader[TSConfig] {
+  implicit val tsConfigLoader: ConfigLoader[TSConfig] = new ConfigLoader[TSConfig] {
     override def load(resource: TSConfig): Try[Config] = {
       def convertTypesafeConfig(tsConfig: TSConfig): Try[AbstractMap] = {
         def unwrap[T: ClassTag](tsConfigValue: ConfigValue): Try[T] = {

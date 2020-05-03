@@ -88,7 +88,7 @@ lazy val docs = (project in file("config-docs"))
   .settings(noPublishSettings)
   .settings(
     moduleName := s"$projectName-docs",
-    mdocIn := file("docs/src/mdoc"),
+    mdocIn := file("config-docs/src/mdoc"),
     mdocOut := file("."),
     mdocVariables := Map(
       "VERSION" -> version.value

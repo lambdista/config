@@ -93,8 +93,8 @@ Suppose the previous configuration is at the relative path: `core/src/test/resou
 
 First thing first, load and parse your config:
 
-```tut:silent
-import scala.util.Try
+```scala mdoc
+import scala.util._
 import scala.concurrent.duration.Duration
 
 import java.nio.file.Paths
@@ -124,7 +124,7 @@ Once you have a `Config` object you can do two main things with it:
 ### Automatic conversion to case class
 Here's how you would map the previous configuration to a case class (`config` is the value from the previous example):
 
-```tut:silent
+```scala mdoc:nest
 case class Greek(alpha: String, beta: Int)
 
 case class FooConfig(
@@ -161,10 +161,10 @@ case class its value becomes `None`.
 would use in regular Scala code. For example, you could have used `5 secs` instead of `5 seconds` in `foo.conf` and
 it would have worked smoothly.
 
-<a name="caseClassConversion"></a>
+<a name="sealedTraitConversion"></a>
 ### Automatic conversion to sealed trait
 Example:
-```tut:silent
+```scala mdoc:nest
 sealed trait Foo
 final case class Bar(a: Int, b: Option[String]) extends Foo
 final case class Baz(z: Int)                    extends Foo
@@ -210,7 +210,7 @@ You can convert a configuration to a `Map[String, A]`, provided that all the val
 automatically generated as in the case class example so you don't need to worry about that.
 Here's an example:
 
-```tut:silent
+```scala mdoc:nest
 val cfgStr = """
 {
   foo = 0,
@@ -237,7 +237,7 @@ Success(Map(foo -> 0, bar -> 1, baz -> 42))
 ### Value-by-value conversion
 Instead of using a case class you may want to retrieve the single values and convert them as you go:
 
-```tut:silent
+```scala mdoc:nest
 val bar: Try[String] = for {
   conf <- config
   result <- conf.getAs[String]("bar")
@@ -252,7 +252,7 @@ Success("hello")
 
 You can also use the *dot* syntax to retrieve a value. E.g.:
 
-```tut:silent
+```scala mdoc:nest
 val cfgStr = """
 {
   foo = {
@@ -274,7 +274,7 @@ Note how the `bar` value was retrieved using the dot syntax.
 Apart from converting the whole config into a case class, you can also convert a given value provided it's an object in
 the JSON-superset syntax:
 
-```tut:silent
+```scala mdoc:nest
 val greekList: Try[List[Greek]] = for {
   conf <- config
   result <- conf.getAs[List[Greek]]("mapList")
@@ -289,7 +289,7 @@ Success(List(Greek(hello,42), Greek(world,24)))
 
 Sorry? You said you would have preferred a `Vector[Greek]` in place of `List[Greek]`? No problem:
 
-```tut:silent
+```scala mdoc:nest
 val greekVector: Try[Vector[Greek]] = for {
   conf <- config
   result <- conf.getAs[Vector[Greek]]("mapList")
@@ -304,7 +304,7 @@ Success(Vector(Greek(hello,42), Greek(world,24)))
 
 Oh, yes, `Set[Greek]` would have worked too:
 
-```tut:silent
+```scala mdoc:nest
 val greekSet: Try[Set[Greek]] = for {
   conf <- config
   result <- conf.getAs[Set[Greek]]("mapList")
@@ -319,7 +319,7 @@ Success(Set(Greek(hello,42), Greek(world,24)))
 
 Analogously you can automatically convert a `Range` into a `List`, `Vector` or `Set`:
 
-```tut:silent
+```scala mdoc:nest
 val rangeAsList: Try[List[Int]] = for {
   conf <- config
   result <- conf.getAs[List[Int]]("range")
@@ -353,7 +353,7 @@ Notice, however, that in case of `Set` the order is not guaranteed because of th
 You can also use a dynamic syntax to access the configuration values by _pretending_ the `Config` object has 
 those fields:
 
-```tut:silent
+```scala mdoc:nest
 val alpha: Try[String] = for {
   conf <- config
   result <- conf.map.alpha.as[String] // equivalent to: conf.getAs[String]("map.alpha")
@@ -375,7 +375,7 @@ Sometimes you may want to provide a custom concrete value decoder for some confi
 you may want to decode a UUID as such instead of using the provided String concrete value decoder, you know,
 for a better type safety.
 
-```tut:silent
+```scala mdoc:nest
 import java.util.UUID
 
 val confStr: String = """
@@ -431,7 +431,7 @@ Actually all you need to do is find a way to *read* your resource into a `String
 What follows is an example of loading the config from a simple `String`. In this example you can also appreciate
 two other features of the library: how it deals with `null` values and its ability to convert char ranges too.
 
-```tut:silent
+```scala mdoc:nest
 val confStr: String = "{age = null, charRange = 'a' to 'z'}"
     
 val config: Try[Config] = Config.from(confStr)
@@ -441,7 +441,7 @@ val age: Try[Option[Int]] = for {
   result <- conf.getAs[Option[Int]]("age")
 } yield result
 
-val age: Try[List[Char]] = for {
+val charRange: Try[List[Char]] = for {
   conf <- config
   result <- conf.getAs[List[Char]]("charRange")
 } yield result
@@ -485,7 +485,7 @@ mapList = [
 
 Suppose it's in a file at the relative path `typesafe/src/test/resources/typesafe.conf`:
 
-```tut:silent
+```scala mdoc:nest
 import scala.util.Try
 
 import java.io.File
@@ -519,7 +519,7 @@ former is that, given a key, if the correspondent value is a map then `thatConfi
 *recursively* merged to this config's value otherwise `thatConfig`'s value replaces this config's value. 
 An example should clarify the difference between the two approaches:
 
-```tut:silent
+```scala mdoc:nest
 val confStr1 = """
 {
   foo = {
@@ -568,7 +568,7 @@ were recursively merged.
 
 On the other hand `merge`'s behaviour is more like Scala's default behaviour when using `++` between two `Map`s. Indeed,
 `config2`'s values replace entirely `config1`'s values with the same key. E.g.:
-```tut:silent
+```scala mdoc:nest
 val confStr1 = """
 {
   foo = {

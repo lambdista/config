@@ -81,13 +81,16 @@ lazy val typesafe = (project in file("typesafe"))
   .settings(commonSettings)
   .settings(moduleName := s"$projectName-typesafe", libraryDependencies ++= typesafeDeps)
 
-lazy val docs = (project in file("docs"))
+lazy val docs = (project in file("config-docs"))
   .dependsOn(core, typesafe)
-  .enablePlugins(TutPlugin)
+  .enablePlugins(MdocPlugin)
   .settings(commonSettings)
   .settings(noPublishSettings)
   .settings(
     moduleName := s"$projectName-docs",
-    tutSourceDirectory := file("docs/src/tut"),
-    tutTargetDirectory := file(".")
+    mdocIn := file("docs/src/mdoc"),
+    mdocOut := file("."),
+    mdocVariables := Map(
+      "VERSION" -> version.value
+    )
   )

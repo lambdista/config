@@ -2,7 +2,7 @@ package com.lambdista
 package config
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
@@ -20,7 +20,7 @@ import java.lang.{Boolean => JBoolean}
   * @since 2016-01-07
   */
 object typesafe {
-  implicit val tsConfigLoader = new ConfigLoader[TSConfig] {
+  implicit val tsConfigLoader: ConfigLoader[TSConfig] = new ConfigLoader[TSConfig] {
     override def load(resource: TSConfig): Try[Config] = {
       def convertTypesafeConfig(tsConfig: TSConfig): Try[AbstractMap] = {
         def unwrap[T: ClassTag](tsConfigValue: ConfigValue): Try[T] = {

@@ -1,12 +1,12 @@
 import sbt._
 
 object Dependencies {
-  lazy val projectScalaVersion = "2.13.0"
+  lazy val projectScalaVersion = "2.13.2"
 
   // Versions
-  lazy val scalaTestVersion      = "3.0.8"
+  lazy val scalaTestVersion      = "3.1.1"
   lazy val shapelessVersion      = "2.3.3"
-  lazy val typesafeConfigVersion = "1.3.4"
+  lazy val typesafeConfigVersion = "1.4.0"
   lazy val fastparseVersion      = "2.1.3"
   lazy val fastparseVersion2_11  = "2.1.2"
 

@@ -1,6 +1,7 @@
 package com.lambdista
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * Abstract base class for unit testing.
@@ -8,4 +9,4 @@ import org.scalatest.{FlatSpec, Matchers}
   * @author Alessandro Lacava 
   * @since 2016-01-12
   */
-abstract class UnitSpec extends FlatSpec with Matchers
+abstract class UnitSpec extends AnyFlatSpec with Matchers

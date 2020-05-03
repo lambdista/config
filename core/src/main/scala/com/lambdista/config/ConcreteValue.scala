@@ -1,11 +1,9 @@
 package com.lambdista
 package config
 
-import scala.annotation.tailrec
+import scala.annotation.{implicitNotFound, tailrec}
 import scala.concurrent.duration.Duration
-import scala.annotation.implicitNotFound
-//import shapeless.labelled.{FieldType, field}
-//import shapeless.{:: => :*:, _}
+
 import com.lambdista.util._
 import magnolia._
 

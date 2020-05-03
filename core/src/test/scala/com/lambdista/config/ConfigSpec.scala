@@ -3,6 +3,7 @@ package config
 
 import java.io.InputStream
 import java.nio.file.Paths
+import java.util.UUID
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -14,7 +15,7 @@ import scala.util.{Failure, Success, Try}
   * @since 2016-01-12
   */
 class ConfigSpec extends UnitSpec {
-  val confStr =
+  val confStr: String =
     """{
       |string = "hello",
       |duration = 5 day,
@@ -23,10 +24,10 @@ class ConfigSpec extends UnitSpec {
       |}""".stripMargin
   val configFromStr: Try[Config] = Config.from(confStr)
 
-  val confPath            = "core/src/test/resources/foo.conf"
+  val confPath: String    = "core/src/test/resources/foo.conf"
   val config: Try[Config] = Config.from(Paths.get(confPath))
 
-  def convertTo[A: ConcreteValue](key: String) =
+  def convertTo[A: ConcreteValue](key: String): Try[A] =
     for {
       c <- config
       a <- c.getAs[A](key)
@@ -110,7 +111,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A config whose keys do not match exactly the case class field names" should "be transformable so that they match" in {
-    val confPath            = "core/src/test/resources/fooish.conf"
+    val confPath: String    = "core/src/test/resources/fooish.conf"
     val config: Try[Config] = Config.from(Paths.get(confPath))
 
     val fooConfig: Try[FooConfig] = for {
@@ -155,7 +156,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "config elements" should "be traversable in a dynamic way" in {
-    val configStr =
+    val configStr: String =
       """
         |{
         |  authMode = "SCRAM-SHA-1",
@@ -181,7 +182,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "Asking for a missing key dynamically" should "produce a Failure" in {
-    val configStr =
+    val configStr: String =
       """
         |{
         |  authMode = "SCRAM-SHA-1",
@@ -207,7 +208,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "Trying to convert to the wrong type an existing config element, retrieved dynamically," should "produce a Failure" in {
-    val configStr =
+    val configStr: String =
       """
         |{
         |  authMode = "SCRAM-SHA-1",
@@ -233,7 +234,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A config" should "be convertible into a case class with other nested case classes" in {
-    val configStr =
+    val configStr: String =
       """
         |{
         |  authMode = "SCRAM-SHA-1",
@@ -265,7 +266,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A map config element" should "be convertible into a Map[String, A] too. Provided an instance of ConcreteValue[A] exists for A" in {
-    val confStr             = "{ map = { foo = 42, bar = 24} }"
+    val confStr: String     = "{ map = { foo = 42, bar = 24} }"
     val config: Try[Config] = Config.from(confStr)
 
     val mapList: Try[Map[String, Int]] = for {
@@ -279,7 +280,7 @@ class ConfigSpec extends UnitSpec {
   "The result of softly merging two configs" should
     "be a new config where, given a key, if the correspondent value is a map then the rhs config's value is " +
       "*softly* merged to the lhs config's value otherwise the rhs config's value replaces the lhs config's value." in {
-    val confStr1 =
+    val confStr1: String =
       """
         |{
         |  foo = {
@@ -289,7 +290,7 @@ class ConfigSpec extends UnitSpec {
         |  baz = 42
         |}
       """.stripMargin
-    val confStr2 =
+    val confStr2: String =
       """
         |{
         |  foo = {
@@ -322,7 +323,7 @@ class ConfigSpec extends UnitSpec {
   "The result of hardly merging two configs" should
     "be similar to Scala's default behaviour when using `++` between two `Map`s and the rhs config's values " +
       "replace entirely the lhs config's values with the same key" in {
-    val confStr1 =
+    val confStr1: String =
       """
         |{
         |  foo = {
@@ -333,7 +334,7 @@ class ConfigSpec extends UnitSpec {
         |  baz = 42
         |}
       """.stripMargin
-    val confStr2 =
+    val confStr2: String =
       """
         |{
         |  foo = {
@@ -363,7 +364,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A config value" should "be callable using the \"dot\" syntax" in {
-    val confStr =
+    val confStr: String =
       """{
         |  foo = {bar = 42}
         |}
@@ -380,7 +381,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A config string" should "work if it contains escaped chars" in {
-    val confStr =
+    val confStr: String =
       """{
         |  foo = "\"hello world\""
         |}
@@ -397,7 +398,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "An ill-formed config" should "fail with a ConfigSyntaxError" in {
-    val confStr = "{a = 42"
+    val confStr: String = "{a = 42"
 
     val config: Try[Config] = Config.from(confStr)
 
@@ -409,7 +410,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A config element not convertible to a given type" should "fail with a ConversionError" in {
-    val confStr = "{int = 42}"
+    val confStr: String = "{int = 42}"
 
     val config: Try[Config] = Config.from(confStr)
 
@@ -423,7 +424,7 @@ class ConfigSpec extends UnitSpec {
   }
 
   "A config element that does not exist" should "fail with a KeyNotFoundError" in {
-    val confStr = "{int = 42}"
+    val confStr: String = "{int = 42}"
 
     val config: Try[Config] = Config.from(confStr)
 
@@ -510,57 +511,58 @@ class ConfigSpec extends UnitSpec {
 
   "A sealed trait" should "be valid to use in config" in {
     sealed trait Foo
-    final case class Bar(a: Int, b: String) extends Foo
-    final case class Baz(x: Boolean)        extends Foo
+    final case class Bar(a: Int, b: Option[String]) extends Foo
+    final case class Baz(z: Int)                    extends Foo
 
-    val barCfg: String =
-      """
-        |{
-        |  a: 42,
-        |  b: "hello"
-        |}
-        |""".stripMargin
+    val barCfg: String = """
+        {
+          a: 42,
+          b: "hello"
+        }
+    """
 
-    val bazCfg: String =
-      """
-        |{
-        |  x: true
-        |}
-        |""".stripMargin
+    val bazCfg: String = """
+        {
+          z: 1
+        }
+    """
 
-    val barC: Try[Config] = Config.from(barCfg)
-    val bazC: Try[Config] = Config.from(bazCfg)
+    val barFoo: Try[Foo] = for {
+      cfg <- Config.from(barCfg)
+      foo <- cfg.as[Foo]
+    } yield foo
 
-    val barFoo: Try[Foo] = barC.flatMap(_.as[Foo])
-    val bazFoo: Try[Foo] = bazC.flatMap(_.as[Foo])
+    val bazFoo: Try[Foo] = for {
+      cfg <- Config.from(bazCfg)
+      foo <- cfg.as[Foo]
+    } yield foo
 
-    barFoo.foreach(println)
-    bazFoo.foreach(println)
-
-    assert(barFoo.isSuccess)
-    assert(bazFoo.isSuccess)
+    assert(barFoo.filter(_ == Bar(42, Some("hello"))).isSuccess)
+    assert(bazFoo.filter(_ == Baz(1)).isSuccess)
   }
 
   "A custom ConcreteValue instances" should "work correctly" in {
     final case class RawString(s: String)
     object RawString {
-      def from(s: String): RawString = {
+      def fromString(s: String): RawString = {
         RawString(s.replace("\\\"", "\""))
       }
 
       implicit val concreteValue: ConcreteValue[RawString] = new ConcreteValue[RawString] {
         override def apply(abstractValue: AbstractValue): Option[RawString] = {
           abstractValue match {
-            case AbstractString(value) => Some(RawString.from(value))
+            case AbstractString(value) => Some(RawString.fromString(value))
             case _                     => None
           }
         }
       }
     }
 
-    val confStr             = """{
-                    |  bar = "a\"b"
-                    |}""".stripMargin
+    val confStr: String     = """
+      {
+        bar = "a\"b"
+      }
+    """
     val config: Try[Config] = Config.from(confStr)
     final case class FooConfig(bar: RawString)
 
@@ -571,6 +573,27 @@ class ConfigSpec extends UnitSpec {
 
     val ff: RawString = fooConfig.get.bar
     assert(ff.s.length == 3)
+  }
+
+  it should "work correctly for UUID too" in {
+    val confStr: String = """
+      {
+        uuid = "238dfdf4-850d-4643-b4f3-019252515ed8"
+      }
+    """
+    final case class Foo(uuid: UUID)
+    implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
+      override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
+        case AbstractString(x) => Try(UUID.fromString(x)).toOption
+        case _                 => None
+      }
+    }
+    val foo: Try[Foo] = for {
+      conf   <- Config.from(confStr)
+      result <- conf.as[Foo]
+    } yield result
+    println(s"foo: $foo")
+    assert(foo.filter(_.uuid == UUID.fromString("238dfdf4-850d-4643-b4f3-019252515ed8")).isSuccess)
   }
 
   "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {

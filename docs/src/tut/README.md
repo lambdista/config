@@ -11,9 +11,11 @@
 * [Configuration Syntax](#configSyntax)
 * [Usage](#usage)
     * [Automatic conversion to case class](#caseClassConversion)
+    * [Automatic conversion to sealed trait](#sealedTraitConversion)
     * [Automatic conversion to Map[String, A]](#mapConversion)
     * [Value-by-value conversion](#valueByValueConversion)
     * [Dynamic value-by-value conversion](#dynamicValueByValueConversion)
+    * [Custom concrete value decoders](#customDecoders)
 * [Config loaders](#configLoaders)
     * [Loading config from a simple String](#stringLoader)
     * [Loading a config from Typesafe Config](#typesafeLoader)
@@ -158,6 +160,48 @@ case class its value becomes `None`.
 * `Range` and `Duration` work like a charm. Note that for both `Range` and `Duration` you can use the syntax you
 would use in regular Scala code. For example, you could have used `5 secs` instead of `5 seconds` in `foo.conf` and
 it would have worked smoothly.
+
+<a name="caseClassConversion"></a>
+### Automatic conversion to sealed trait
+Example:
+```tut:silent
+sealed trait Foo
+final case class Bar(a: Int, b: Option[String]) extends Foo
+final case class Baz(z: Int)                    extends Foo
+
+val barCfg: String = """
+    {
+      a: 42,
+      b: "hello"
+    }
+"""
+
+val bazCfg: String = """
+    {
+      z: 1
+    }
+"""
+
+val barFoo: Try[Foo] = for {
+  cfg <- Config.from(barCfg)
+  foo <- cfg.as[Foo]
+} yield foo
+
+val bazFoo: Try[Foo] = for {
+  cfg <- Config.from(bazCfg)
+  foo <- cfg.as[Foo]
+} yield foo
+```
+The value of `barFoo` will be:
+
+```scala
+Success(Bar(42,Some(hello)))
+```
+The value of `bazFoo` will be:
+
+```scala
+Success(Baz(1))
+```
 
 <a name="mapConversion"></a>
 ### Automatic conversion to `Map[String, A]`
@@ -324,6 +368,40 @@ Success("hello")
 
 **Warning**: Some IDEs could mark `map.alpha` as an error since they don't know about the dynamic nature of
 those fields. Nevertheless, your code will keep compiling and working like a charm.
+
+<a name="customDecoders"></a>
+### Custom concrete value decoders
+Sometimes you may want to provide a custom concrete value decoder for some configuration parameter. For example
+you may want to decode a UUID as such instead of using the provided String concrete value decoder, you know,
+for a better type safety.
+
+```tut:silent
+import java.util.UUID
+
+val confStr: String = """
+  {
+    uuid = "238dfdf4-850d-4643-b4f3-019252515ed8"
+  }
+"""
+final case class Foo(uuid: UUID)
+implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
+  override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
+    case AbstractString(x) => Try(UUID.fromString(x)).toOption
+    case _                 => None
+  }
+}
+
+val foo: Try[Foo] = for {
+  conf <- Config.from(confStr)
+  result <- conf.as[Foo]
+} yield result
+```
+
+The value of `foo` will be:
+
+```scala
+Success(Foo(238dfdf4-850d-4643-b4f3-019252515ed8))
+```
 
 <a name="configLoaders"></a>
 ## Config loaders

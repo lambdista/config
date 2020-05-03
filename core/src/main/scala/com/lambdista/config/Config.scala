@@ -1,10 +1,10 @@
 package com.lambdista
 package config
 
+import scala.language.dynamics
 import scala.util.{Failure, Success, Try}
 
 import com.lambdista.util.syntax.std.option._
-import scala.language.dynamics
 
 /**
   * This class represents the configuration.

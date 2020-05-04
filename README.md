@@ -11,9 +11,11 @@
 * [Configuration Syntax](#configSyntax)
 * [Usage](#usage)
     * [Automatic conversion to case class](#caseClassConversion)
+    * [Automatic conversion to sealed trait](#sealedTraitConversion)
     * [Automatic conversion to Map[String, A]](#mapConversion)
     * [Value-by-value conversion](#valueByValueConversion)
     * [Dynamic value-by-value conversion](#dynamicValueByValueConversion)
+    * [Custom concrete value decoders](#customDecoders)
 * [Config loaders](#configLoaders)
     * [Loading config from a simple String](#stringLoader)
     * [Loading a config from Typesafe Config](#typesafeLoader)
@@ -28,7 +30,7 @@ Right from the start I didn't want to depend on other config libraries when I st
 my own parser for a simple *JSONish* syntax. One of the advantages in using your own parser is you can add other custom
 types. For example this lib allows you to define a 
 Scala [Range](http://www.scala-lang.org/api/current/index.html#scala.collection.immutable.Range) while 
-[HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) doesn't let you do it.
+[HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) doesn't.
 Hence, this is not only another [Typesafe's config](https://github.com/typesafehub/config) wrapper. However,
 if you are already using Typesafe's config library and/or just prefer HOCON syntax for your configuration,
 there's an adapter that will convert a Typesafe `Config` object into this config's AST.
@@ -53,7 +55,7 @@ As a first step you need to add the resolver and dependency to your build file:
 ```scala
 resolvers += "lambdista at bintray" at "https://dl.bintray.com/lambdista/maven"
 
-libraryDependencies += "com.lambdista" %% "config" % "0.6.0"
+libraryDependencies += "com.lambdista" %% "config" % "0.7.0"
 ```
 
 Scala 2.13.x, 2.12.x and 2.11.x are supported.
@@ -92,16 +94,48 @@ Suppose the previous configuration is at the relative path: `core/src/test/resou
 First thing first, load and parse your config:
 
 ```scala
-import scala.util.Try
-import scala.concurrent.duration.Duration
+import scala.util._
+import scala.concurrent.duration.Duration
 
-import java.nio.file.Paths
+import java.nio.file.Paths
 
-import com.lambdista.config._
+import com.lambdista.config._
 
 val confPath = "core/src/test/resources/foo.conf"
+// confPath: String = "core/src/test/resources/foo.conf"
 
 val config: Try[Config] = Config.from(Paths.get(confPath))
+// config: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       HashMap(
+//         "duration" -> AbstractDuration(5 seconds),
+//         "range" -> AbstractRange(Range(2, 4, 6, 8, 10)),
+//         "bar" -> AbstractString("hello"),
+//         "mapList" -> AbstractList(
+//           List(
+//             AbstractMap(
+//               Map(
+//                 "alpha" -> AbstractString("hello"),
+//                 "beta" -> AbstractNumber(42.0)
+//               )
+//             ),
+//             AbstractMap(
+//               Map(
+//                 "alpha" -> AbstractString("world"),
+//                 "beta" -> AbstractNumber(24.0)
+//               )
+//             )
+//           )
+//         ),
+//         "baz" -> AbstractNumber(42.0),
+//         "list" -> AbstractList(
+//           List(AbstractNumber(1.0), AbstractNumber(2.0), AbstractNumber(3.0))
+//         )
+//       )
+//     )
+//   )
+// )
 ```
 
 Apart from `java.nio.file.Path` you can load your config from other resources using [Config Loaders](#configLoaders).
@@ -123,7 +157,7 @@ Once you have a `Config` object you can do two main things with it:
 Here's how you would map the previous configuration to a case class (`config` is the value from the previous example):
 
 ```scala
-case class Greek(alpha: String, beta: Int)
+case class Greek(alpha: String, beta: Int)
 
 case class FooConfig(
     bar: String, 
@@ -134,12 +168,15 @@ case class FooConfig(
     range: Range, 
     duration: Duration,
     missingValue: Option[String]
-)
+)
 
 val fooConfig: Try[FooConfig] = for {
   conf <- config
   result <- conf.as[FooConfig]
 } yield result
+// fooConfig: Try[FooConfig] = Failure(
+//   com.lambdista.config.ConversionError: Could not convert {duration = 5 seconds, range = [2.0, 4.0, 6.0, 8.0, 10.0], bar = "hello", mapList = [{alpha = "hello", beta = 42.0}, {alpha = "world", beta = 24.0}], baz = 42.0, list = [1.0, 2.0, 3.0]} to the type requested
+// )
 ```
 
 The value of `fooConfig` will be:
@@ -159,6 +196,61 @@ case class its value becomes `None`.
 would use in regular Scala code. For example, you could have used `5 secs` instead of `5 seconds` in `foo.conf` and
 it would have worked smoothly.
 
+<a name="sealedTraitConversion"></a>
+### Automatic conversion to sealed trait
+Example:
+```scala
+sealed trait Foo
+final case class Bar(a: Int, b: Option[String]) extends Foo
+final case class Baz(z: Int)                    extends Foo
+
+val barCfg: String = """
+    {
+      a: 42,
+      b: "hello"
+    }
+"""
+// barCfg: String = """
+//     {
+//       a: 42,
+//       b: "hello"
+//     }
+// """
+
+val bazCfg: String = """
+    {
+      z: 1
+    }
+"""
+// bazCfg: String = """
+//     {
+//       z: 1
+//     }
+// """
+
+val barFoo: Try[Foo] = for {
+  cfg <- Config.from(barCfg)
+  foo <- cfg.as[Foo]
+} yield foo
+// barFoo: Try[Foo] = Success(Bar(42, Some("hello")))
+
+val bazFoo: Try[Foo] = for {
+  cfg <- Config.from(bazCfg)
+  foo <- cfg.as[Foo]
+} yield foo
+// bazFoo: Try[Foo] = Success(Baz(1))
+```
+The value of `barFoo` will be:
+
+```scala
+Success(Bar(42,Some(hello)))
+```
+The value of `bazFoo` will be:
+
+```scala
+Success(Baz(1))
+```
+
 <a name="mapConversion"></a>
 ### Automatic conversion to `Map[String, A]`
 You can convert a configuration to a `Map[String, A]`, provided that all the values in the `Map` have the same type,
@@ -174,13 +266,34 @@ val cfgStr = """
   baz = 42
 }
 """
+// cfgStr: String = """
+// {
+//   foo = 0,
+//   bar = 1,
+//   baz = 42
+// }
+// """
 
 val config: Try[Config] = Config.from(cfgStr)
+// config: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "foo" -> AbstractNumber(0.0),
+//         "bar" -> AbstractNumber(1.0),
+//         "baz" -> AbstractNumber(42.0)
+//       )
+//     )
+//   )
+// )
 
 val confAsMap: Try[Map[String, Int]] = for {
   conf <- config
   result <- conf.as[Map[String, Int]]
 } yield result
+// confAsMap: Try[Map[String, Int]] = Success(
+//   Map("foo" -> 0, "bar" -> 1, "baz" -> 42)
+// )
 ```
 
 The value of `confAsMap` will be:
@@ -198,6 +311,9 @@ val bar: Try[String] = for {
   conf <- config
   result <- conf.getAs[String]("bar")
 } yield result
+// bar: Try[String] = Failure(
+//   com.lambdista.config.ConversionError: Could not convert 1.0 to the type requested
+// )
 ```
 
 The value of `bar` will be:
@@ -216,13 +332,26 @@ val cfgStr = """
   }
 }
 """
+// cfgStr: String = """
+// {
+//   foo = {
+//     bar = 42
+//   }
+// }
+// """
 
 val config: Try[Config] = Config.from(cfgStr)
+// config: Try[Config] = Success(
+//   Config(
+//     AbstractMap(Map("foo" -> AbstractMap(Map("bar" -> AbstractNumber(42.0)))))
+//   )
+// )
 
 val bar: Try[Int] = for {
   c <- config
   bar <- c.getAs[Int]("foo.bar")
 } yield bar
+// bar: Try[Int] = Success(42)
 ```
 
 Note how the `bar` value was retrieved using the dot syntax.
@@ -235,6 +364,9 @@ val greekList: Try[List[Greek]] = for {
   conf <- config
   result <- conf.getAs[List[Greek]]("mapList")
 } yield result
+// greekList: Try[List[Greek]] = Failure(
+//   com.lambdista.config.KeyNotFoundError: No such key: mapList
+// )
 ```
 
 The value of `greekList` will be:
@@ -250,6 +382,9 @@ val greekVector: Try[Vector[Greek]] = for {
   conf <- config
   result <- conf.getAs[Vector[Greek]]("mapList")
 } yield result
+// greekVector: Try[Vector[Greek]] = Failure(
+//   com.lambdista.config.KeyNotFoundError: No such key: mapList
+// )
 ```
 
 Here's the value of `greekVector`:
@@ -265,6 +400,9 @@ val greekSet: Try[Set[Greek]] = for {
   conf <- config
   result <- conf.getAs[Set[Greek]]("mapList")
 } yield result
+// greekSet: Try[Set[Greek]] = Failure(
+//   com.lambdista.config.KeyNotFoundError: No such key: mapList
+// )
 ```
 
 Here's the value of `greekSet`:
@@ -280,16 +418,25 @@ val rangeAsList: Try[List[Int]] = for {
   conf <- config
   result <- conf.getAs[List[Int]]("range")
 } yield result
+// rangeAsList: Try[List[Int]] = Failure(
+//   com.lambdista.config.KeyNotFoundError: No such key: range
+// )
 
 val rangeAsVector: Try[Vector[Int]] = for {
   conf <- config
   result <- conf.getAs[Vector[Int]]("range")
 } yield result
+// rangeAsVector: Try[Vector[Int]] = Failure(
+//   com.lambdista.config.KeyNotFoundError: No such key: range
+// )
 
 val rangeAsSet: Try[Set[Int]] = for {
   conf <- config
   result <- conf.getAs[Set[Int]]("range")
 } yield result
+// rangeAsSet: Try[Set[Int]] = Failure(
+//   com.lambdista.config.KeyNotFoundError: No such key: range
+// )
 ```
 
 Here are the results:
@@ -314,6 +461,9 @@ val alpha: Try[String] = for {
   conf <- config
   result <- conf.map.alpha.as[String] // equivalent to: conf.getAs[String]("map.alpha")
 } yield result
+// alpha: Try[String] = Failure(
+//   com.lambdista.config.KeyNotFoundError: No such key: map
+// )
 ```
 
 The value of `alpha` will be:
@@ -324,6 +474,47 @@ Success("hello")
 
 **Warning**: Some IDEs could mark `map.alpha` as an error since they don't know about the dynamic nature of
 those fields. Nevertheless, your code will keep compiling and working like a charm.
+
+<a name="customDecoders"></a>
+### Custom concrete value decoders
+Sometimes you may want to provide a custom concrete value decoder for some configuration parameter. For example
+you may want to decode a UUID as such instead of using the provided String concrete value decoder, you know,
+for a better type safety.
+
+```scala
+import java.util.UUID
+
+val confStr: String = """
+  {
+    uuid = "238dfdf4-850d-4643-b4f3-019252515ed8"
+  }
+"""
+// confStr: String = """
+//   {
+//     uuid = "238dfdf4-850d-4643-b4f3-019252515ed8"
+//   }
+// """
+final case class Foo(uuid: UUID)
+implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
+  override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
+    case AbstractString(x) => Try(UUID.fromString(x)).toOption
+    case _                 => None
+  }
+}
+// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@611bf7c0
+
+val foo: Try[Foo] = for {
+  conf <- Config.from(confStr)
+  result <- conf.as[Foo]
+} yield result
+// foo: Try[Foo] = Success(Foo(238dfdf4-850d-4643-b4f3-019252515ed8))
+```
+
+The value of `foo` will be:
+
+```scala
+Success(Foo(238dfdf4-850d-4643-b4f3-019252515ed8))
+```
 
 <a name="configLoaders"></a>
 ## Config loaders
@@ -355,18 +546,89 @@ two other features of the library: how it deals with `null` values and its abili
 
 ```scala
 val confStr: String = "{age = null, charRange = 'a' to 'z'}"
+// confStr: String = "{age = null, charRange = 'a' to 'z'}"
     
 val config: Try[Config] = Config.from(confStr)
+// config: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "age" -> AbstractNone,
+//         "charRange" -> AbstractRange(
+//           Range(
+//             97,
+//             98,
+//             99,
+//             100,
+//             101,
+//             102,
+//             103,
+//             104,
+//             105,
+//             106,
+//             107,
+//             108,
+//             109,
+//             110,
+//             111,
+//             112,
+//             113,
+//             114,
+//             115,
+//             116,
+//             117,
+//             118,
+//             119,
+//             120,
+//             121,
+//             122
+//           )
+//         )
+//       )
+//     )
+//   )
+// )
 
 val age: Try[Option[Int]] = for {
   conf <- config
   result <- conf.getAs[Option[Int]]("age")
 } yield result
+// age: Try[Option[Int]] = Success(None)
 
-val age: Try[List[Char]] = for {
+val charRange: Try[List[Char]] = for {
   conf <- config
   result <- conf.getAs[List[Char]]("charRange")
 } yield result
+// charRange: Try[List[Char]] = Success(
+//   List(
+//     'a',
+//     'b',
+//     'c',
+//     'd',
+//     'e',
+//     'f',
+//     'g',
+//     'h',
+//     'i',
+//     'j',
+//     'k',
+//     'l',
+//     'm',
+//     'n',
+//     'o',
+//     'p',
+//     'q',
+//     'r',
+//     's',
+//     't',
+//     'u',
+//     'v',
+//     'w',
+//     'x',
+//     'y',
+//     'z'
+//   )
+// )
 ```
 
 As you may expect the values of `age` and `charRange` will be:
@@ -383,7 +645,7 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.6.0"
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.7.0"
 ```
 
 The example configuration is the following:
@@ -408,23 +670,59 @@ mapList = [
 Suppose it's in a file at the relative path `typesafe/src/test/resources/typesafe.conf`:
 
 ```scala
-import scala.util.Try
+import scala.util.Try
 
-import java.io.File
-import com.typesafe.config.{Config => TSConfig, ConfigFactory}
-import com.lambdista.config.typesafe._ // important to bring into scope the ConfigLoader for Typesafe's Config
+import java.io.File
+import com.typesafe.config.{Config => TSConfig, ConfigFactory}
+import com.lambdista.config.typesafe._ // important to bring into scope the ConfigLoader for Typesafe's Config // important to bring into scope the ConfigLoader for Typesafe's Config
 
-case class Person(firstName: String, lastName: String)
+case class Person(firstName: String, lastName: String)
 
-case class TypesafeConfig(string: String, int: Int, double: Double, boolean: Boolean, list: List[Int], mapList: List[Person])
+case class TypesafeConfig(string: String, int: Int, double: Double, boolean: Boolean, list: List[Int], mapList: List[Person])
 
 val confPath = "typesafe/src/test/resources/typesafe.conf"
+// confPath: String = "typesafe/src/test/resources/typesafe.conf"
 
 val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
+// tsConfig: com.typesafe.config.Config = Config(SimpleConfigObject({"boolean":true,"double":1.414,"int":42,"list":[1,2,3],"mapList":[{"firstName":"John","lastName":"Doe"},{"firstName":"Jane","lastName":"Doe"}],"string":"hello"}))
 
 val configTry: Try[Config] = Config.from(tsConfig)
+// configTry: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       HashMap(
+//         "string" -> AbstractString("hello"),
+//         "double" -> AbstractNumber(1.414),
+//         "boolean" -> AbstractBool(true),
+//         "int" -> AbstractNumber(42.0),
+//         "mapList" -> AbstractList(
+//           List(
+//             AbstractMap(
+//               Map(
+//                 "firstName" -> AbstractString("John"),
+//                 "lastName" -> AbstractString("Doe")
+//               )
+//             ),
+//             AbstractMap(
+//               Map(
+//                 "lastName" -> AbstractString("Doe"),
+//                 "firstName" -> AbstractString("Jane")
+//               )
+//             )
+//           )
+//         ),
+//         "list" -> AbstractList(
+//           List(AbstractNumber(1.0), AbstractNumber(2.0), AbstractNumber(3.0))
+//         )
+//       )
+//     )
+//   )
+// )
 
 val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
+// typesafeConfig: Try[TypesafeConfig] = Failure(
+//   com.lambdista.config.ConversionError: Could not convert {age = None, charRange = [97.0, 98.0, 99.0, 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0, 109.0, 110.0, 111.0, 112.0, 113.0, 114.0, 115.0, 116.0, 117.0, 118.0, 119.0, 120.0, 121.0, 122.0]} to the type requested
+// )
 ```
 
 The value of `typesafeConfig` will be:
@@ -451,6 +749,15 @@ val confStr1 = """
   baz = 42
 }
 """
+// confStr1: String = """
+// {
+//   foo = {
+//     alpha = 1,
+//     bar = "hello"
+//   },
+//   baz = 42
+// }
+// """
 
 val confStr2 = """
 {
@@ -462,16 +769,67 @@ val confStr2 = """
   zoo = "hi"
 }
 """
+// confStr2: String = """
+// {
+//   foo = {
+//     baz = 15,
+//     bar = "goodbye"
+//   },
+//   baz = 1,
+//   zoo = "hi"
+// }
+// """
 
 val config1: Try[Config] = Config.from(confStr1)
+// config1: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "foo" -> AbstractMap(
+//           Map("alpha" -> AbstractNumber(1.0), "bar" -> AbstractString("hello"))
+//         ),
+//         "baz" -> AbstractNumber(42.0)
+//       )
+//     )
+//   )
+// )
 
 val config2: Try[Config] = Config.from(confStr2)
+// config2: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "foo" -> AbstractMap(
+//           Map("baz" -> AbstractNumber(15.0), "bar" -> AbstractString("goodbye"))
+//         ),
+//         "baz" -> AbstractNumber(1.0),
+//         "zoo" -> AbstractString("hi")
+//       )
+//     )
+//   )
+// )
 
 val mergedConfig: Try[Config] = for {
   conf1 <- config1
   conf2 <- config2
 } yield conf1.recursivelyMerge(conf2)
-
+// mergedConfig: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "foo" -> AbstractMap(
+//           Map(
+//             "alpha" -> AbstractNumber(1.0),
+//             "bar" -> AbstractString("goodbye"),
+//             "baz" -> AbstractNumber(15.0)
+//           )
+//         ),
+//         "baz" -> AbstractNumber(1.0),
+//         "zoo" -> AbstractString("hi")
+//       )
+//     )
+//   )
+// )
 ```
 `mergedConfig` will represent a config such as the following:
 ```
@@ -501,6 +859,16 @@ val confStr1 = """
   baz = 42
 }
 """
+// confStr1: String = """
+// {
+//   foo = {
+//     alpha = 1,
+//     bar = "hello"
+//   },
+//   zoo = "hi",
+//   baz = 42
+// }
+// """
 
 val confStr2 = """
 {
@@ -511,15 +879,62 @@ val confStr2 = """
   baz = 1
 }
 """
+// confStr2: String = """
+// {
+//   foo = {
+//     baz = 15,
+//     bar = "goodbye"
+//   },
+//   baz = 1
+// }
+// """
 
 val config1: Try[Config] = Config.from(confStr1)
+// config1: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "foo" -> AbstractMap(
+//           Map("alpha" -> AbstractNumber(1.0), "bar" -> AbstractString("hello"))
+//         ),
+//         "zoo" -> AbstractString("hi"),
+//         "baz" -> AbstractNumber(42.0)
+//       )
+//     )
+//   )
+// )
 
 val config2: Try[Config] = Config.from(confStr2)
+// config2: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "foo" -> AbstractMap(
+//           Map("baz" -> AbstractNumber(15.0), "bar" -> AbstractString("goodbye"))
+//         ),
+//         "baz" -> AbstractNumber(1.0)
+//       )
+//     )
+//   )
+// )
 
 val mergedConfig: Try[Config] = for {
   conf1 <- config1
   conf2 <- config2
 } yield conf1.merge(conf2)
+// mergedConfig: Try[Config] = Success(
+//   Config(
+//     AbstractMap(
+//       Map(
+//         "foo" -> AbstractMap(
+//           Map("baz" -> AbstractNumber(15.0), "bar" -> AbstractString("goodbye"))
+//         ),
+//         "zoo" -> AbstractString("hi"),
+//         "baz" -> AbstractNumber(1.0)
+//       )
+//     )
+//   )
+// )
 ``` 
 
 `mergedConfig` will represent a config such as the following:
@@ -538,7 +953,7 @@ Look at the tests for this library to see the examples in practise.
 
 <a name="scaladoc"></a>
 ## Scaladoc API
-[config API](https://javadoc.io/doc/com.lambdista/config_2.12)
+[config API](https://javadoc.io/doc/com.lambdista/config_2.13)
 
 <a name="feedback"></a>
 ## Bugs and Feedback
@@ -546,7 +961,7 @@ For bugs, questions and discussions please use [Github Issues](https://github.co
 
 <a name="license"></a>
 ## License
-Copyright 2016-2019 Alessandro Lacava.
+Copyright 2016-2020 Alessandro Lacava.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at

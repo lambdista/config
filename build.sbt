@@ -1,3 +1,5 @@
+import java.time.LocalDate
+
 import Dependencies._
 
 lazy val projectName = "config"
@@ -91,6 +93,6 @@ lazy val docs = (project in file("config-docs"))
     mdocIn := file("config-docs/src/mdoc"),
     mdocOut := file("."),
     mdocVariables := Map(
-      "VERSION" -> version.value
+      "YEAR" -> LocalDate.now.getYear.toString
     )
   )

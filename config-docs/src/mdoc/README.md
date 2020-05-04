@@ -30,7 +30,7 @@ Right from the start I didn't want to depend on other config libraries when I st
 my own parser for a simple *JSONish* syntax. One of the advantages in using your own parser is you can add other custom
 types. For example this lib allows you to define a 
 Scala [Range](http://www.scala-lang.org/api/current/index.html#scala.collection.immutable.Range) while 
-[HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) doesn't let you do it.
+[HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) doesn't.
 Hence, this is not only another [Typesafe's config](https://github.com/typesafehub/config) wrapper. However,
 if you are already using Typesafe's config library and/or just prefer HOCON syntax for your configuration,
 there's an adapter that will convert a Typesafe `Config` object into this config's AST.
@@ -616,7 +616,7 @@ Look at the tests for this library to see the examples in practise.
 
 <a name="scaladoc"></a>
 ## Scaladoc API
-[config API](https://javadoc.io/doc/com.lambdista/config_2.12)
+[config API](https://javadoc.io/doc/com.lambdista/config_2.13)
 
 <a name="feedback"></a>
 ## Bugs and Feedback
@@ -624,7 +624,7 @@ For bugs, questions and discussions please use [Github Issues](https://github.co
 
 <a name="license"></a>
 ## License
-Copyright 2016-2019 Alessandro Lacava.
+Copyright 2016-@YEAR@ Alessandro Lacava.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at

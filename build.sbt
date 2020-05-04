@@ -1,3 +1,5 @@
+import java.time.LocalDate
+
 import Dependencies._
 
 lazy val projectName = "config"
@@ -6,7 +8,7 @@ lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
-  version := "0.6.0",
+  version := "0.7.0",
   crossScalaVersions := Seq(projectScalaVersion, "2.12.10", "2.11.12"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions :=
@@ -81,13 +83,16 @@ lazy val typesafe = (project in file("typesafe"))
   .settings(commonSettings)
   .settings(moduleName := s"$projectName-typesafe", libraryDependencies ++= typesafeDeps)
 
-lazy val docs = (project in file("docs"))
+lazy val docs = (project in file("config-docs"))
   .dependsOn(core, typesafe)
-  .enablePlugins(TutPlugin)
+  .enablePlugins(MdocPlugin)
   .settings(commonSettings)
   .settings(noPublishSettings)
   .settings(
     moduleName := s"$projectName-docs",
-    tutSourceDirectory := file("docs/src/tut"),
-    tutTargetDirectory := file(".")
+    mdocIn := file("config-docs/src/mdoc"),
+    mdocOut := file("."),
+    mdocVariables := Map(
+      "YEAR" -> LocalDate.now.getYear.toString
+    )
   )

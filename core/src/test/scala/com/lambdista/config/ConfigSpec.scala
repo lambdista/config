@@ -176,7 +176,7 @@ class ConfigSpec extends UnitSpec {
     result shouldBe Right(1 second)
   }
 
-  "Asking for a missing key dynamically" should "produce a Failure" in {
+  "Asking for a missing key dynamically" should "produce an error" in {
     val configStr: String =
       """
         |{
@@ -202,7 +202,7 @@ class ConfigSpec extends UnitSpec {
     result shouldBe Left(_: KeyNotFoundError)
   }
 
-  "Trying to convert to the wrong type an existing config element, retrieved dynamically," should "produce a Failure" in {
+  "Trying to convert to the wrong type an existing config element, retrieved dynamically," should "produce an error" in {
     val configStr: String =
       """
         |{
@@ -402,7 +402,7 @@ class ConfigSpec extends UnitSpec {
     val confStr: String        = "{int = 42}"
     val config: Result[Config] = Config.from(confStr)
     val string: Result[String] = config.flatMap(_.getAs[String]("int"))
-    config shouldBe Left(_: ConversionError)
+    string shouldBe Left(_: ConversionError)
   }
 
   "A config element that does not exist" should "fail with a KeyNotFoundError" in {

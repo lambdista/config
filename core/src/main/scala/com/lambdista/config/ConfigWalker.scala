@@ -4,7 +4,7 @@ import scala.language.dynamics
 
 /**
   * This class lets you walk across a configuration dynamically. Nonetheless it manages possible errors within
-  * the `Try`.
+  * [[com.lambdista.config.Result]].
   *
   * @author Alessandro Lacava (@lambdista)
   * @since 2016-11-23

@@ -6,10 +6,8 @@ import java.lang.{Boolean => JBoolean}
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
 
 import com.lambdista.util.sequence
-import com.lambdista.util.syntax.std.option._
 import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueType, Config => TSConfig}
 
 /**
@@ -20,52 +18,52 @@ import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue, ConfigValueTy
   */
 object typesafe {
   implicit val tsConfigLoader: ConfigLoader[TSConfig] = new ConfigLoader[TSConfig] {
-    override def load(resource: TSConfig): Try[Config] = {
-      def convertTypesafeConfig(tsConfig: TSConfig): Try[AbstractMap] = {
-        def unwrap[T: ClassTag](tsConfigValue: ConfigValue): Try[T] = {
+    override def load(resource: TSConfig): Result[Config] = {
+      def convertTypesafeConfig(tsConfig: TSConfig): Result[AbstractMap] = {
+        def unwrap[T: ClassTag](tsConfigValue: ConfigValue): Result[T] = {
           tsConfigValue.unwrapped match {
-            case t: T => Success(t)
+            case t: T => Right(t)
             case _ =>
               val className = implicitly[ClassTag[T]].runtimeClass.getName
-              Failure(
+              Left(
                 new TypesafeConversionError(s"Could not convert $tsConfigValue to underlying type $className")
               )
           }
         }
 
-        def convertConfigObject(tsConfigValue: ConfigValue): Try[AbstractMap] =
+        def convertConfigObject(tsConfigValue: ConfigValue): Result[AbstractMap] =
           convertTypesafeConfig(tsConfigValue.asInstanceOf[ConfigObject].toConfig)
 
-        def convertConfigList(tsConfigList: ConfigList): Try[AbstractList] = {
+        def convertConfigList(tsConfigList: ConfigList): Result[AbstractList] = {
           val list = tsConfigList.asScala.toList.map(v => convertConfigValue(v).toOption)
 
           sequence(list)
             .map(AbstractList)
-            .toTry(new TypesafeConversionError(s"Could not convert $tsConfigList to a ConfigValue"))
+            .toRight(new TypesafeConversionError(s"Could not convert $tsConfigList to a ConfigValue"))
         }
 
-        def convertConfigValue(tsConfigValue: ConfigValue): Try[AbstractValue] = {
+        def convertConfigValue(tsConfigValue: ConfigValue): Result[AbstractValue] = {
           tsConfigValue.valueType match {
-            case ConfigValueType.NULL    => Success(AbstractNone)
+            case ConfigValueType.NULL    => Right(AbstractNone)
             case ConfigValueType.BOOLEAN => unwrap[JBoolean](tsConfigValue).map(x => AbstractBool(x.booleanValue()))
             case ConfigValueType.NUMBER  => unwrap[Number](tsConfigValue).map(n => AbstractNumber(n.doubleValue))
             case ConfigValueType.STRING  => unwrap[String](tsConfigValue).map(AbstractString)
             case ConfigValueType.OBJECT  => convertConfigObject(tsConfigValue)
             case ConfigValueType.LIST    => convertConfigList(tsConfigValue.asInstanceOf[ConfigList])
 
-            case _ => Failure(new TypesafeConversionError(s"Could not convert $tsConfigValue to a ConfigValue"))
+            case _ => Left(new TypesafeConversionError(s"Could not convert $tsConfigValue to a ConfigValue"))
           }
         }
 
-        def tsConfigEntriesAsAbstractMap(tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
+        def tsConfigEntriesAsAbstractMap(tsConfigEntries: List[(String, ConfigValue)]): Result[AbstractMap] = {
           @tailrec
-          def go(acc: Map[String, AbstractValue], tsConfigEntries: List[(String, ConfigValue)]): Try[AbstractMap] = {
+          def go(acc: Map[String, AbstractValue], tsConfigEntries: List[(String, ConfigValue)]): Result[AbstractMap] = {
             tsConfigEntries match {
-              case Nil => Success(AbstractMap(acc))
+              case Nil => Right(AbstractMap(acc))
               case (k, v) :: es =>
                 convertConfigValue(v) match {
-                  case Failure(err) => Failure(err)
-                  case Success(cv)  => go(acc + (k -> cv), es)
+                  case Left(err) => Left(err)
+                  case Right(cv) => go(acc + (k -> cv), es)
                 }
             }
           }

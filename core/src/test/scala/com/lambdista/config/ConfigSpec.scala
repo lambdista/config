@@ -6,7 +6,6 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 
 /**
   * Unit Test for Config.
@@ -22,12 +21,12 @@ class ConfigSpec extends UnitSpec {
       |charRange = 'a' to 'z',
       |opt = null
       |}""".stripMargin
-  val configFromStr: Try[Config] = Config.from(confStr)
+  val configFromStr: Result[Config] = Config.from(confStr)
 
-  val confPath: String    = "core/src/test/resources/foo.conf"
-  val config: Try[Config] = Config.from(Paths.get(confPath))
+  val confPath: String       = "core/src/test/resources/foo.conf"
+  val config: Result[Config] = Config.from(Paths.get(confPath))
 
-  def convertTo[A: ConcreteValue](key: String): Try[A] =
+  def convertTo[A: ConcreteValue](key: String): Result[A] =
     for {
       c <- config
       a <- c.getAs[A](key)
@@ -50,71 +49,67 @@ class ConfigSpec extends UnitSpec {
   case class HardFoo(baz: Int, bar: String)
   case class HardMerge(foo: HardFoo, baz: Int, zoo: String)
 
-  def areSuccesses(tries: Try[_]*): Boolean = tries.forall(_.isSuccess)
+  def areSuccesses(tries: Result[_]*): Boolean = tries.forall(_.isRight)
 
   "A well-formed config represented by a string" should "be loaded correctly" in {
-    assert(configFromStr.isSuccess)
+    assert(configFromStr.isRight)
   }
 
   it should "encode its values correctly" in {
-    val string: Try[String] = for {
+    val string: Result[String] = for {
       c <- configFromStr
       v <- c.getAs[String]("string")
     } yield v
 
-    val duration: Try[Duration] = for {
+    val duration: Result[Duration] = for {
       c <- configFromStr
       v <- c.getAs[Duration]("duration")
     } yield v
 
-    val charRange: Try[Vector[Char]] = for {
+    val charRange: Result[Vector[Char]] = for {
       c <- configFromStr
       v <- c.getAs[Vector[Char]]("charRange")
     } yield v
 
-    val opt: Try[Option[Int]] = for {
+    val opt: Result[Option[Int]] = for {
       c <- configFromStr
       v <- c.getAs[Option[Int]]("opt")
     } yield v
 
     assert(areSuccesses(string, duration, charRange, opt))
-
-    string.get shouldBe "hello"
-
-    duration.get shouldBe 5.days
-
-    charRange.get shouldBe ('a' to 'z')
-
-    opt.get shouldBe None
+    assert(string.contains("hello"))
+    assert(duration.contains(5.days))
+    assert(charRange.contains('a' to 'z'))
+    assert(opt.contains(None))
   }
 
   "A well-formed config represented by a resource in the class path" should "be loaded correctly" in {
-    val is: InputStream     = getClass.getResourceAsStream("/foo.conf")
-    val config: Try[Config] = Config.from(is)
+    val is: InputStream        = getClass.getResourceAsStream("/foo.conf")
+    val config: Result[Config] = Config.from(is)
 
-    assert(config.isSuccess)
+    assert(config.isRight)
   }
 
   "A well-formed config represented by a Path" should "be loaded correctly" in {
-    assert(config.isSuccess)
+    assert(config.isRight)
   }
 
   "A config" should "be entirely convertible into a case class provided that its keys match the case class field names" in {
     // Note how baz: Option[Int] is converted correctly. If, in the config file, baz were null, the Option value would've
     // been None. Furthermore, conversions from Range to List or Vector or Set and List to Vector or Set happens automatically
-    val fooConfig: Try[FooConfig] = for {
+    val fooConfig: Result[FooConfig] = for {
       c <- config
       a <- c.as[FooConfig]
     } yield a
 
-    assert(fooConfig.isSuccess)
+    assert(fooConfig.isRight)
   }
 
   "A config whose keys do not match exactly the case class field names" should "be transformable so that they match" in {
-    val confPath: String    = "core/src/test/resources/fooish.conf"
-    val config: Try[Config] = Config.from(Paths.get(confPath))
+    val confPath: String       = "core/src/test/resources/fooish.conf"
+    val config: Result[Config] = Config.from(Paths.get(confPath))
 
-    val fooConfig: Try[FooConfig] = for {
+    val fooConfig: Result[FooConfig] = for {
       c <- config
       // first convert the Config into a AbstractMap...
       map <- c.as[AbstractMap]
@@ -126,31 +121,31 @@ class ConfigSpec extends UnitSpec {
       fooConf <- newMap.as[FooConfig]
     } yield fooConf
 
-    assert(fooConfig.isSuccess)
+    assert(fooConfig.isRight)
   }
 
   "A config" should "allow conversions into a case class also for any of its elements" in {
-    val greeks: Try[List[Greek]] = for {
+    val greeks: Result[List[Greek]] = for {
       c <- config
       a <- c.getAs[List[Greek]]("mapList")
     } yield a
 
-    assert(greeks.isSuccess)
+    assert(greeks.isRight)
   }
 
   "A range element config element" should "be convertible into a List, but also into a Vector or Set" in {
-    val range: Try[Range]               = convertTo[Range]("range")
-    val rangeAsList: Try[List[Int]]     = convertTo[List[Int]]("range")
-    val rangeAsVector: Try[Vector[Int]] = convertTo[Vector[Int]]("range")
-    val rangeAsSet: Try[Set[Int]]       = convertTo[Set[Int]]("range")
+    val range: Result[Range]               = convertTo[Range]("range")
+    val rangeAsList: Result[List[Int]]     = convertTo[List[Int]]("range")
+    val rangeAsVector: Result[Vector[Int]] = convertTo[Vector[Int]]("range")
+    val rangeAsSet: Result[Set[Int]]       = convertTo[Set[Int]]("range")
 
     assert(areSuccesses(range, rangeAsList, rangeAsVector, rangeAsSet))
   }
 
   "A list config element" should "be convertible into a List, but also into a Vector or Set" in {
-    val list: Try[List[Greek]]           = convertTo[List[Greek]]("mapList")
-    val listAsVector: Try[Vector[Greek]] = convertTo[Vector[Greek]]("mapList")
-    val listAsSet: Try[Set[Greek]]       = convertTo[Set[Greek]]("mapList")
+    val list: Result[List[Greek]]           = convertTo[List[Greek]]("mapList")
+    val listAsVector: Result[Vector[Greek]] = convertTo[Vector[Greek]]("mapList")
+    val listAsSet: Result[Set[Greek]]       = convertTo[Set[Greek]]("mapList")
 
     assert(areSuccesses(list, listAsVector, listAsSet))
   }
@@ -171,14 +166,14 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config: Try[Config] = Config.from(configStr)
+    val config: Result[Config] = Config.from(configStr)
 
-    val result: Try[Duration] = for {
+    val result: Result[Duration] = for {
       c            <- config
       initialDelay <- c.failover.initialDelay.as[Duration]
     } yield initialDelay
 
-    result shouldBe Success(1 second)
+    result shouldBe Right(1 second)
   }
 
   "Asking for a missing key dynamically" should "produce a Failure" in {
@@ -197,14 +192,14 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config: Try[Config] = Config.from(configStr)
+    val config: Result[Config] = Config.from(configStr)
 
-    val result: Try[Int] = for {
+    val result: Result[Int] = for {
       c          <- config
       missingKey <- c.failover.missingKey.as[Int]
     } yield missingKey
 
-    result shouldBe Failure(_: KeyNotFoundError)
+    result shouldBe Left(_: KeyNotFoundError)
   }
 
   "Trying to convert to the wrong type an existing config element, retrieved dynamically," should "produce a Failure" in {
@@ -223,14 +218,14 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config: Try[Config] = Config.from(configStr)
+    val config: Result[Config] = Config.from(configStr)
 
-    val result: Try[Int] = for {
+    val result: Result[Int] = for {
       c            <- config
       initialDelay <- c.failover.initialDelay.as[Int]
     } yield initialDelay
 
-    result shouldBe Failure(_: ConversionError)
+    result shouldBe Left(_: ConversionError)
   }
 
   "A config" should "be convertible into a case class with other nested case classes" in {
@@ -249,7 +244,7 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config: Try[Config] = Config.from(configStr)
+    val config: Result[Config] = Config.from(configStr)
 
     case class Failover(initialDelay: Duration, retries: Int, delayFactor: Double)
     case class ConnOptions(
@@ -260,21 +255,21 @@ class ConfigSpec extends UnitSpec {
       failover: Failover
     )
 
-    val result: Try[ConnOptions] = config.flatMap(_.as[ConnOptions])
+    val result: Result[ConnOptions] = config.flatMap(_.as[ConnOptions])
 
     assert(areSuccesses(result))
   }
 
   "A map config element" should "be convertible into a Map[String, A] too. Provided an instance of ConcreteValue[A] exists for A" in {
-    val confStr: String     = "{ map = { foo = 42, bar = 24} }"
-    val config: Try[Config] = Config.from(confStr)
+    val confStr: String        = "{ map = { foo = 42, bar = 24} }"
+    val config: Result[Config] = Config.from(confStr)
 
-    val mapList: Try[Map[String, Int]] = for {
+    val mapList: Result[Map[String, Int]] = for {
       c <- config
       m <- c.getAs[Map[String, Int]]("map")
     } yield m
 
-    assert(mapList.isSuccess)
+    assert(mapList.isRight)
   }
 
   "The result of softly merging two configs" should
@@ -302,22 +297,22 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config1: Try[Config] = Config.from(confStr1)
-    val config2: Try[Config] = Config.from(confStr2)
+    val config1: Result[Config] = Config.from(confStr1)
+    val config2: Result[Config] = Config.from(confStr2)
 
-    val config: Try[Config] = for {
+    val config: Result[Config] = for {
       c1 <- config1
       c2 <- config2
     } yield c1.recursivelyMerge(c2)
 
-    val person: Try[SoftMerge] = for {
+    val person: Result[SoftMerge] = for {
       c <- config
       p <- c.as[SoftMerge]
     } yield p
 
     val expectedResult = SoftMerge(SoftFoo(alpha = 1, baz = 15, bar = "goodbye"), baz = 1, zoo = "hi")
 
-    person should matchPattern { case Success(`expectedResult`) => }
+    person should matchPattern { case Right(`expectedResult`) => }
   }
 
   "The result of hardly merging two configs" should
@@ -345,22 +340,22 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config1: Try[Config] = Config.from(confStr1)
-    val config2: Try[Config] = Config.from(confStr2)
+    val config1: Result[Config] = Config.from(confStr1)
+    val config2: Result[Config] = Config.from(confStr2)
 
-    val config: Try[Config] = for {
+    val config: Result[Config] = for {
       c1 <- config1
       c2 <- config2
     } yield c1.recursivelyMerge(c2)
 
-    val person: Try[HardMerge] = for {
+    val person: Result[HardMerge] = for {
       c <- config
       p <- c.as[HardMerge]
     } yield p
 
     val expectedResult = HardMerge(HardFoo(baz = 15, bar = "goodbye"), baz = 1, zoo = "hi")
 
-    person should matchPattern { case Success(`expectedResult`) => }
+    person should matchPattern { case Right(`expectedResult`) => }
   }
 
   "A config value" should "be callable using the \"dot\" syntax" in {
@@ -370,14 +365,14 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config: Try[Config] = Config.from(confStr)
+    val config: Result[Config] = Config.from(confStr)
 
-    val bar: Try[Int] = for {
+    val bar: Result[Int] = for {
       c   <- config
       bar <- c.getAs[Int]("foo.bar")
     } yield bar
 
-    bar should matchPattern { case Success(42) => }
+    bar should matchPattern { case Right(42) => }
   }
 
   "A config string" should "work if it contains escaped chars" in {
@@ -387,54 +382,34 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin
 
-    val config: Try[Config] = Config.from(confStr)
+    val config: Result[Config] = Config.from(confStr)
 
-    val foo: Try[String] = for {
+    val foo: Result[String] = for {
       c <- config
       f <- c.getAs[String]("foo")
     } yield f
 
-    foo should matchPattern { case Success("\\\"hello world\\\"") => }
+    foo should matchPattern { case Right("\\\"hello world\\\"") => }
   }
 
   "An ill-formed config" should "fail with a ConfigSyntaxError" in {
-    val confStr: String = "{a = 42"
-
-    val config: Try[Config] = Config.from(confStr)
-
-    assert(config.isFailure)
-
-    intercept[ConfigSyntaxError] {
-      config.get
-    }
+    val confStr: String        = "{a = 42"
+    val config: Result[Config] = Config.from(confStr)
+    config shouldBe Left(_: ConfigSyntaxError)
   }
 
   "A config element not convertible to a given type" should "fail with a ConversionError" in {
-    val confStr: String = "{int = 42}"
-
-    val config: Try[Config] = Config.from(confStr)
-
-    val string: Try[String] = config.flatMap(_.getAs[String]("int"))
-
-    assert(string.isFailure)
-
-    intercept[ConversionError] {
-      string.get
-    }
+    val confStr: String        = "{int = 42}"
+    val config: Result[Config] = Config.from(confStr)
+    val string: Result[String] = config.flatMap(_.getAs[String]("int"))
+    config shouldBe Left(_: ConversionError)
   }
 
   "A config element that does not exist" should "fail with a KeyNotFoundError" in {
-    val confStr: String = "{int = 42}"
-
-    val config: Try[Config] = Config.from(confStr)
-
-    val int: Try[Int] = config.flatMap(_.getAs[Int]("nonexistentKey"))
-
-    assert(int.isFailure)
-
-    intercept[KeyNotFoundError] {
-      int.get
-    }
+    val confStr: String        = "{int = 42}"
+    val config: Result[Config] = Config.from(confStr)
+    val int: Result[Int]       = config.flatMap(_.getAs[Int]("nonexistentKey"))
+    int shouldBe Left(_: KeyNotFoundError)
   }
 
   "A config" should "support comments" in {
@@ -449,7 +424,7 @@ class ConfigSpec extends UnitSpec {
       array: List[Int]
     )
 
-    val result: Try[Config] = ConfigParser.parse(""" // comment 1
+    val result: Result[Config] = ConfigParser.parse(""" // comment 1
           |{
           |// comment 2
           |omg   = "123",
@@ -466,12 +441,12 @@ class ConfigSpec extends UnitSpec {
 
     val conf = result.flatMap(_.as[Conf])
 
-    assert(result.isSuccess)
-    assert(conf.isSuccess)
+    assert(result.isRight)
+    assert(conf.isRight)
   }
 
   it should "support single-line comments repeated multiple times" in {
-    val result: Try[Config] = ConfigParser.parse("""
+    val result: Result[Config] = ConfigParser.parse("""
         |// comment 1
         |# comment 2
         |// comment 3
@@ -501,12 +476,12 @@ class ConfigSpec extends UnitSpec {
         |}
       """.stripMargin)
 
-    val conf: Try[Map[String, AbstractValue]] = result.flatMap(_.as[Map[String, AbstractValue]])
+    val conf: Result[Map[String, AbstractValue]] = result.flatMap(_.as[Map[String, AbstractValue]])
 
     conf.foreach(println)
 
-    assert(result.isSuccess)
-    assert(conf.isSuccess)
+    assert(result.isRight)
+    assert(conf.isRight)
   }
 
   "A sealed trait" should "be valid to use in config" in {
@@ -527,18 +502,18 @@ class ConfigSpec extends UnitSpec {
         }
     """
 
-    val barFoo: Try[Foo] = for {
+    val barFoo: Result[Foo] = for {
       cfg <- Config.from(barCfg)
       foo <- cfg.as[Foo]
     } yield foo
 
-    val bazFoo: Try[Foo] = for {
+    val bazFoo: Result[Foo] = for {
       cfg <- Config.from(bazCfg)
       foo <- cfg.as[Foo]
     } yield foo
 
-    assert(barFoo.filter(_ == Bar(42, Some("hello"))).isSuccess)
-    assert(bazFoo.filter(_ == Baz(1)).isSuccess)
+    assert(barFoo.contains(Bar(42, Some("hello"))))
+    assert(bazFoo.contains(Baz(1)))
   }
 
   "A custom ConcreteValue instances" should "work correctly" in {
@@ -558,21 +533,20 @@ class ConfigSpec extends UnitSpec {
       }
     }
 
-    val confStr: String     = """
+    val confStr: String        = """
       {
         bar = "a\"b"
       }
     """
-    val config: Try[Config] = Config.from(confStr)
+    val config: Result[Config] = Config.from(confStr)
     final case class FooConfig(bar: RawString)
 
-    val fooConfig: Try[FooConfig] = for {
+    val fooConfig: Result[FooConfig] = for {
       conf   <- config
       result <- conf.as[FooConfig]
     } yield result
 
-    val ff: RawString = fooConfig.get.bar
-    assert(ff.s.length == 3)
+    assert(fooConfig.map(_.bar).contains(RawString.fromString("a\"b")))
   }
 
   it should "work correctly for UUID too" in {
@@ -584,16 +558,16 @@ class ConfigSpec extends UnitSpec {
     final case class Foo(uuid: UUID)
     implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
       override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
-        case AbstractString(x) => Try(UUID.fromString(x)).toOption
+        case AbstractString(x) => Result.attempt(UUID.fromString(x)).toOption
         case _                 => None
       }
     }
-    val foo: Try[Foo] = for {
+    val foo: Result[Foo] = for {
       conf   <- Config.from(confStr)
       result <- conf.as[Foo]
     } yield result
     println(s"foo: $foo")
-    assert(foo.filter(_.uuid == UUID.fromString("238dfdf4-850d-4643-b4f3-019252515ed8")).isSuccess)
+    assert(foo.map(_.uuid).contains(UUID.fromString("238dfdf4-850d-4643-b4f3-019252515ed8")))
   }
 
   "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {
@@ -613,6 +587,6 @@ class ConfigSpec extends UnitSpec {
 
     val result = Config.from(cfgStr).flatMap(_.as[Bar])
 
-    assert(result.isSuccess)
+    assert(result.isRight)
   }
 }

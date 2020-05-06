@@ -4,7 +4,6 @@ package config
 import java.util.concurrent.TimeUnit
 
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
 
 import fastparse.NoWhitespace._
 import fastparse._
@@ -139,15 +138,15 @@ object ConfigParser {
         abstractString | abstractBool | abstractNone | abstractNumber) ~ optionalSpaces
     ) ~ singleLineComment.rep
 
-  def parse(confStr: String): Try[Config] = {
+  def parse(confStr: String): Result[Config] = {
     fastparse.parse(confStr, jsonExpr(_)) match {
       case Parsed.Success(result, _) =>
         result match {
-          case map: AbstractMap => Success(Config(map))
+          case map: AbstractMap => Right(Config(map))
           case _ =>
-            Failure(new ConfigSyntaxError("The whole configuration must be represented as a pseudo-json object"))
+            Left(new ConfigSyntaxError("The whole configuration must be represented as a pseudo-json object"))
         }
-      case x: Parsed.Failure => Failure(new ConfigSyntaxError(x.msg))
+      case x: Parsed.Failure => Left(new ConfigSyntaxError(x.msg))
     }
   }
 }

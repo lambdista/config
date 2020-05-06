@@ -12,7 +12,7 @@ lazy val coursierVersion   = "1.0.0"
 lazy val revolverVersion   = "0.9.1"
 lazy val mdocVersion       = "2.1.5"
 lazy val scovVersion       = "1.6.0"
-lazy val bintrayVersion    = "0.5.4"
+lazy val bintrayVersion    = "0.5.6"
 
 addSbtPlugin("io.get-coursier"   % "sbt-coursier"  % coursierVersion)
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"  % scalafmtVersion)

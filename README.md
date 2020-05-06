@@ -58,7 +58,7 @@ resolvers += "lambdista at bintray" at "https://dl.bintray.com/lambdista/maven"
 libraryDependencies += "com.lambdista" %% "config" % "0.7.0"
 ```
 
-Scala 2.13.x, 2.12.x and 2.11.x are supported.
+Scala 2.13.x and 2.12.x are supported.
 
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 
@@ -104,9 +104,9 @@ val config: Result[Config] = Config.from(Paths.get(confPath))
 // config: Result[Config] = Right(
 //   Config(
 //     AbstractMap(
-//       HashMap(
+//       Map(
 //         "duration" -> AbstractDuration(5 seconds),
-//         "range" -> AbstractRange(Range(2, 4, 6, 8, 10)),
+//         "range" -> AbstractRange(Range.Inclusive(2, 4, 6, 8, 10)),
 //         "bar" -> AbstractString("hello"),
 //         "mapList" -> AbstractList(
 //           List(
@@ -498,7 +498,7 @@ implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
     case _                 => None
   }
 }
-// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@11ddfac1
+// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@3299a3d9
 
 val foo: Result[Foo] = for {
   conf <- Config.from(confStr)
@@ -552,7 +552,7 @@ val config: Result[Config] = Config.from(confStr)
 //       Map(
 //         "age" -> AbstractNone,
 //         "charRange" -> AbstractRange(
-//           Range(
+//           Range.Inclusive(
 //             97,
 //             98,
 //             99,
@@ -685,7 +685,7 @@ val configTry: Result[Config] = Config.from(tsConfig)
 // configTry: Result[Config] = Right(
 //   Config(
 //     AbstractMap(
-//       HashMap(
+//       Map(
 //         "string" -> AbstractString("hello"),
 //         "double" -> AbstractNumber(1.414),
 //         "boolean" -> AbstractBool(true),

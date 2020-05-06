@@ -198,7 +198,7 @@ object Config {
     * the configuration.
     *
     * @param resource the resource representing the configuration
-    * @return a `Result[Config]`. If it's a `Failure` it means that either there has been a problem loading the resource
+    * @return a `Result[Config]`. If it's a `Left` it means that either there has been a problem loading the resource
     *         or the configuration syntax is not correct.
     */
   def from[R: ConfigLoader](resource: R): Result[Config] = ConfigLoader[R].load(resource)

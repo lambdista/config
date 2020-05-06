@@ -94,26 +94,23 @@ Suppose the previous configuration is at the relative path: `core/src/test/resou
 First thing first, load and parse your config:
 
 ```scala mdoc
-import scala.util._
 import scala.concurrent.duration.Duration
-
 import java.nio.file.Paths
-
 import com.lambdista.config._
 
 val confPath = "core/src/test/resources/foo.conf"
-
-val config: Try[Config] = Config.from(Paths.get(confPath))
+val config: Result[Config] = Config.from(Paths.get(confPath))
 ```
 
 Apart from `java.nio.file.Path` you can load your config from other resources using [Config Loaders](#configLoaders).
  
-As you can see the result is a `Try[Config]`. Indeed you can get two types of error here:
+As you can see the result is a `Result[Config]` (where `Result[A]` is just a type alias for `Either[Error, A]`).
+Indeed you can get two types of error here:
 
 * The resource cannot be found.
 * The resource can be found but its parsing failed.
 
-In both cases you would get a `Failure` wrapping the appropriate `Error` (a subclass of `Exception`).
+In both cases you would get a `Left` wrapping the appropriate `Error` (a subclass of `Exception`).
 
 Once you have a `Config` object you can do two main things with it:
 
@@ -138,7 +135,7 @@ case class FooConfig(
     missingValue: Option[String]
 )
 
-val fooConfig: Try[FooConfig] = for {
+val fooConfig: Result[FooConfig] = for {
   conf <- config
   result <- conf.as[FooConfig]
 } yield result
@@ -147,7 +144,7 @@ val fooConfig: Try[FooConfig] = for {
 The value of `fooConfig` will be:
 
 ```scala
-Success(FooConfig(hello,Some(42),List(1, 2, 3),Greek(hello,42),List(Greek(hello,42), Greek(world,24)),Range(2, 4, 6, 8, 10),5 seconds))
+Right(FooConfig(hello,Some(42),List(1, 2, 3),Greek(hello,42),List(Greek(hello,42), Greek(world,24)),Range(2, 4, 6, 8, 10),5 seconds))
 ```
 
 Here you can already notice some interesting features of this library:
@@ -182,12 +179,12 @@ val bazCfg: String = """
     }
 """
 
-val barFoo: Try[Foo] = for {
+val barFoo: Result[Foo] = for {
   cfg <- Config.from(barCfg)
   foo <- cfg.as[Foo]
 } yield foo
 
-val bazFoo: Try[Foo] = for {
+val bazFoo: Result[Foo] = for {
   cfg <- Config.from(bazCfg)
   foo <- cfg.as[Foo]
 } yield foo
@@ -195,12 +192,12 @@ val bazFoo: Try[Foo] = for {
 The value of `barFoo` will be:
 
 ```scala
-Success(Bar(42,Some(hello)))
+Right(Bar(42,Some(hello)))
 ```
 The value of `bazFoo` will be:
 
 ```scala
-Success(Baz(1))
+Right(Baz(1))
 ```
 
 <a name="mapConversion"></a>
@@ -219,9 +216,9 @@ val cfgStr = """
 }
 """
 
-val config: Try[Config] = Config.from(cfgStr)
+val config: Result[Config] = Config.from(cfgStr)
 
-val confAsMap: Try[Map[String, Int]] = for {
+val confAsMap: Result[Map[String, Int]] = for {
   conf <- config
   result <- conf.as[Map[String, Int]]
 } yield result
@@ -230,7 +227,7 @@ val confAsMap: Try[Map[String, Int]] = for {
 The value of `confAsMap` will be:
 
 ```scala
-Success(Map(foo -> 0, bar -> 1, baz -> 42))
+Right(Map(foo -> 0, bar -> 1, baz -> 42))
 ```
 
 <a name="valueByValueConversion"></a>
@@ -238,7 +235,7 @@ Success(Map(foo -> 0, bar -> 1, baz -> 42))
 Instead of using a case class you may want to retrieve the single values and convert them as you go:
 
 ```scala mdoc:nest
-val bar: Try[String] = for {
+val bar: Result[String] = for {
   conf <- config
   result <- conf.getAs[String]("bar")
 } yield result
@@ -247,7 +244,7 @@ val bar: Try[String] = for {
 The value of `bar` will be:
 
 ```scala
-Success("hello")
+Right("hello")
 ```
 
 You can also use the *dot* syntax to retrieve a value. E.g.:
@@ -261,9 +258,9 @@ val cfgStr = """
 }
 """
 
-val config: Try[Config] = Config.from(cfgStr)
+val config: Result[Config] = Config.from(cfgStr)
 
-val bar: Try[Int] = for {
+val bar: Result[Int] = for {
   c <- config
   bar <- c.getAs[Int]("foo.bar")
 } yield bar
@@ -275,7 +272,7 @@ Apart from converting the whole config into a case class, you can also convert a
 the JSON-superset syntax:
 
 ```scala mdoc:nest
-val greekList: Try[List[Greek]] = for {
+val greekList: Result[List[Greek]] = for {
   conf <- config
   result <- conf.getAs[List[Greek]]("mapList")
 } yield result
@@ -284,13 +281,13 @@ val greekList: Try[List[Greek]] = for {
 The value of `greekList` will be:
 
 ```scala
-Success(List(Greek(hello,42), Greek(world,24)))
+Right(List(Greek(hello,42), Greek(world,24)))
 ```
 
 Sorry? You said you would have preferred a `Vector[Greek]` in place of `List[Greek]`? No problem:
 
 ```scala mdoc:nest
-val greekVector: Try[Vector[Greek]] = for {
+val greekVector: Result[Vector[Greek]] = for {
   conf <- config
   result <- conf.getAs[Vector[Greek]]("mapList")
 } yield result
@@ -299,13 +296,13 @@ val greekVector: Try[Vector[Greek]] = for {
 Here's the value of `greekVector`:
 
 ```scala
-Success(Vector(Greek(hello,42), Greek(world,24)))
+Right(Vector(Greek(hello,42), Greek(world,24)))
 ```
 
 Oh, yes, `Set[Greek]` would have worked too:
 
 ```scala mdoc:nest
-val greekSet: Try[Set[Greek]] = for {
+val greekSet: Result[Set[Greek]] = for {
   conf <- config
   result <- conf.getAs[Set[Greek]]("mapList")
 } yield result
@@ -314,23 +311,23 @@ val greekSet: Try[Set[Greek]] = for {
 Here's the value of `greekSet`:
 
 ```scala
-Success(Set(Greek(hello,42), Greek(world,24)))
+Right(Set(Greek(hello,42), Greek(world,24)))
 ```
 
 Analogously you can automatically convert a `Range` into a `List`, `Vector` or `Set`:
 
 ```scala mdoc:nest
-val rangeAsList: Try[List[Int]] = for {
+val rangeAsList: Result[List[Int]] = for {
   conf <- config
   result <- conf.getAs[List[Int]]("range")
 } yield result
 
-val rangeAsVector: Try[Vector[Int]] = for {
+val rangeAsVector: Result[Vector[Int]] = for {
   conf <- config
   result <- conf.getAs[Vector[Int]]("range")
 } yield result
 
-val rangeAsSet: Try[Set[Int]] = for {
+val rangeAsSet: Result[Set[Int]] = for {
   conf <- config
   result <- conf.getAs[Set[Int]]("range")
 } yield result
@@ -339,11 +336,11 @@ val rangeAsSet: Try[Set[Int]] = for {
 Here are the results:
 
 ```scala
-Success(List(2, 4, 6, 8, 10)) // rangeAsList
+Right(List(2, 4, 6, 8, 10)) // rangeAsList
 
-Success(Vector(2, 4, 6, 8, 10)) // rangeAsVector
+Right(Vector(2, 4, 6, 8, 10)) // rangeAsVector
 
-Success(Set(4, 2, 8, 6, 10)) // rangeAsSet
+Right(Set(4, 2, 8, 6, 10)) // rangeAsSet
 ```
 
 Notice, however, that in case of `Set` the order is not guaranteed because of the very nature of sets.
@@ -354,7 +351,7 @@ You can also use a dynamic syntax to access the configuration values by _pretend
 those fields:
 
 ```scala mdoc:nest
-val alpha: Try[String] = for {
+val alpha: Result[String] = for {
   conf <- config
   result <- conf.map.alpha.as[String] // equivalent to: conf.getAs[String]("map.alpha")
 } yield result
@@ -363,7 +360,7 @@ val alpha: Try[String] = for {
 The value of `alpha` will be:
 
 ```scala
-Success("hello")
+Right("hello")
 ```
 
 **Warning**: Some IDEs could mark `map.alpha` as an error since they don't know about the dynamic nature of
@@ -386,12 +383,12 @@ val confStr: String = """
 final case class Foo(uuid: UUID)
 implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
   override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
-    case AbstractString(x) => Try(UUID.fromString(x)).toOption
+    case AbstractString(x) => Result.attempt(UUID.fromString(x)).toOption
     case _                 => None
   }
 }
 
-val foo: Try[Foo] = for {
+val foo: Result[Foo] = for {
   conf <- Config.from(confStr)
   result <- conf.as[Foo]
 } yield result
@@ -400,7 +397,7 @@ val foo: Try[Foo] = for {
 The value of `foo` will be:
 
 ```scala
-Success(Foo(238dfdf4-850d-4643-b4f3-019252515ed8))
+Right(Foo(238dfdf4-850d-4643-b4f3-019252515ed8))
 ```
 
 <a name="configLoaders"></a>
@@ -419,7 +416,7 @@ available in scope. Here's how the `ConfigLoader` looks like:
 
 ```scala
 trait ConfigLoader[R] {
-  def load(resource: R): Try[Config]
+  def load(resource: R): Result[Config]
 }
 ```
 
@@ -434,14 +431,14 @@ two other features of the library: how it deals with `null` values and its abili
 ```scala mdoc:nest
 val confStr: String = "{age = null, charRange = 'a' to 'z'}"
     
-val config: Try[Config] = Config.from(confStr)
+val config: Result[Config] = Config.from(confStr)
 
-val age: Try[Option[Int]] = for {
+val age: Result[Option[Int]] = for {
   conf <- config
   result <- conf.getAs[Option[Int]]("age")
 } yield result
 
-val charRange: Try[List[Char]] = for {
+val charRange: Result[List[Char]] = for {
   conf <- config
   result <- conf.getAs[List[Char]]("charRange")
 } yield result
@@ -450,9 +447,9 @@ val charRange: Try[List[Char]] = for {
 As you may expect the values of `age` and `charRange` will be:
 
 ```scala
-Success(None) // age
+Right(None) // age
 
-Success(List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)) // charRange
+Right(List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)) // charRange
 ```
 
 <a name="typesafeLoader"></a>
@@ -486,8 +483,6 @@ mapList = [
 Suppose it's in a file at the relative path `typesafe/src/test/resources/typesafe.conf`:
 
 ```scala mdoc:nest
-import scala.util.Try
-
 import java.io.File
 import com.typesafe.config.{Config => TSConfig, ConfigFactory}
 import com.lambdista.config.typesafe._ // important to bring into scope the ConfigLoader for Typesafe's Config
@@ -500,15 +495,15 @@ val confPath = "typesafe/src/test/resources/typesafe.conf"
 
 val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
-val configTry: Try[Config] = Config.from(tsConfig)
+val configTry: Result[Config] = Config.from(tsConfig)
 
-val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
+val typesafeConfig: Result[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
 ```
 
 The value of `typesafeConfig` will be:
 
 ```scala
-Success(TypesafeConfig(hello,42,1.414,true,List(1, 2, 3),List(Person(John,Doe), Person(Jane,Doe))))
+Right(TypesafeConfig(hello,42,1.414,true,List(1, 2, 3),List(Person(John,Doe), Person(Jane,Doe))))
 ```
 
 <a name="mergingConfigs"></a>
@@ -541,11 +536,11 @@ val confStr2 = """
 }
 """
 
-val config1: Try[Config] = Config.from(confStr1)
+val config1: Result[Config] = Config.from(confStr1)
 
-val config2: Try[Config] = Config.from(confStr2)
+val config2: Result[Config] = Config.from(confStr2)
 
-val mergedConfig: Try[Config] = for {
+val mergedConfig: Result[Config] = for {
   conf1 <- config1
   conf2 <- config2
 } yield conf1.recursivelyMerge(conf2)
@@ -590,11 +585,11 @@ val confStr2 = """
 }
 """
 
-val config1: Try[Config] = Config.from(confStr1)
+val config1: Result[Config] = Config.from(confStr1)
 
-val config2: Try[Config] = Config.from(confStr2)
+val config2: Result[Config] = Config.from(confStr2)
 
-val mergedConfig: Try[Config] = for {
+val mergedConfig: Result[Config] = for {
   conf1 <- config1
   conf2 <- config2
 } yield conf1.merge(conf2)

@@ -2,9 +2,6 @@ package com.lambdista
 package config
 
 import scala.language.dynamics
-import scala.util.{Failure, Success, Try}
-
-import com.lambdista.util.syntax.std.option._
 
 /**
   * This class represents the configuration.
@@ -32,11 +29,11 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     * }}}
     * the conversion is possible as in:
     * {{{
-    * config.as[Foo] // result Success(Foo(42, "hello"))
+    * config.as[Foo] // result Right(Foo(42, "hello"))
     * }}}
-    * @return a `Try[A]`, which is a `Success` if the conversion is successful, a `Failure` if it's not.
+    * @return a `Result[A]`, which is a `Right` if the conversion is successful, a `Left` if it's not.
     */
-  def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(abstractMap).toTry(new ConversionError(abstractMap))
+  def as[A: ConcreteValue]: Result[A] = ConcreteValue[A].apply(abstractMap).toRight(new ConversionError(abstractMap))
 
   /**
     * Tries to retrieve a config value and convert it into a concrete Scala value. It may fail in one of two ways:
@@ -48,9 +45,9 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     * @param key the key to look for
     * @return
     */
-  def getAs[A: ConcreteValue](key: String): Try[A] = {
+  def getAs[A: ConcreteValue](key: String): Result[A] = {
     getValue(key).flatMap { x =>
-      ConcreteValue[A].apply(x).toTry(new ConversionError(x))
+      ConcreteValue[A].apply(x).toRight(new ConversionError(x))
     }
   }
 
@@ -145,7 +142,7 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     Config(AbstractMap(this.abstractMap.value ++ thatConfig.abstractMap.value))
   }
 
-  def selectDynamic(key: String): ConfigWalker = ConfigWalker(Success(abstractMap)).selectDynamic(key)
+  def selectDynamic(key: String): ConfigWalker = ConfigWalker(Right(abstractMap)).selectDynamic(key)
 
   private def mergeAbstractMaps(abstractMap1: AbstractMap, abstractMap2: AbstractMap): AbstractMap = {
     def mergeMaps(map1: Map[String, AbstractValue], map2: Map[String, AbstractValue]): Map[String, AbstractValue] = {
@@ -164,26 +161,24 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     AbstractMap(mergeMaps(abstractMap1.value, abstractMap2.value))
   }
 
-  private def getValue(key: String): Try[AbstractValue] = {
-    val recoverer: Try[AbstractValue] =
+  private def getValue(key: String): Result[AbstractValue] = {
+    val recoverer: Result[AbstractValue] =
       if (key.exists(_ == '.'))
         getValueFromMultipleStrings(key.split("\\.").toList)
       else
-        Failure(new KeyNotFoundError(key))
+        Left(new KeyNotFoundError(key))
 
-    abstractMap.get(key) recoverWith {
-      case _ => recoverer
-    }
+    abstractMap.get(key).orElse(recoverer)
   }
 
-  private def getValueFromMultipleStrings(keys: List[String]): Try[AbstractValue] = {
+  private def getValueFromMultipleStrings(keys: List[String]): Result[AbstractValue] = {
     val head   = keys.head
     val middle = keys.tail.init
     val last   = keys.last
 
     val zero = abstractMap.get(head).flatMap(_.as[AbstractMap])
 
-    val traversalResult: Try[AbstractValue] = middle.foldLeft(zero) { (acc, a) =>
+    val traversalResult: Result[AbstractValue] = middle.foldLeft(zero) { (acc, a) =>
       acc.flatMap(x => x.get(a).flatMap(_.as[AbstractMap]))
     }
 
@@ -203,8 +198,8 @@ object Config {
     * the configuration.
     *
     * @param resource the resource representing the configuration
-    * @return a `Try[Config]`. If it's a `Failure` it means that either there has been a problem loading the resource
+    * @return a `Result[Config]`. If it's a `Failure` it means that either there has been a problem loading the resource
     *         or the configuration syntax is not correct.
     */
-  def from[R: ConfigLoader](resource: R): Try[Config] = ConfigLoader[R].load(resource)
+  def from[R: ConfigLoader](resource: R): Result[Config] = ConfigLoader[R].load(resource)
 }

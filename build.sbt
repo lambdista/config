@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
   version := "0.7.0",
-  crossScalaVersions := Seq(projectScalaVersion, "2.12.10", "2.11.12"),
+  crossScalaVersions := Seq(projectScalaVersion, "2.12.10"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions :=
     (CrossVersion.partialVersion(scalaVersion.value) match {
@@ -72,10 +72,7 @@ lazy val core = (project in file("core"))
   .settings(commonSettings)
   .settings(
     moduleName := projectName,
-    libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) | Some((2, 12)) => coreDeps
-      case _                             => coreDeps2_11
-    })
+    libraryDependencies ++= coreDeps
   )
 
 lazy val typesafe = (project in file("typesafe"))

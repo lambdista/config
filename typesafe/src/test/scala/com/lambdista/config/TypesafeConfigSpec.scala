@@ -3,8 +3,6 @@ package config
 
 import java.io.File
 
-import scala.util.Try
-
 import com.typesafe.config.{ConfigFactory, Config => TSConfig}
 
 // important to bring into scope the ConfigLoader instance for Typesafe's Config
@@ -32,11 +30,11 @@ class TypesafeConfigSpec extends UnitSpec {
     val confPath           = "typesafe/src/test/resources/typesafe.conf"
     val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
-    val config: Try[Config] = Config.from(tsConfig)
+    val config: Result[Config] = Config.from(tsConfig)
 
-    val typesafeConfig: Try[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
+    val typesafeConfig: Result[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
 
-    assert(typesafeConfig.isSuccess)
+    assert(typesafeConfig.isRight)
   }
 
   case class Ws(url: String, key: String)
@@ -49,12 +47,11 @@ class TypesafeConfigSpec extends UnitSpec {
     val confPath           = "typesafe/src/test/resources/typesafe2.conf"
     val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
-    val configuration: Try[Configuration] = for {
+    val configuration: Result[Configuration] = for {
       conf <- Config.from(tsConfig)
       res  <- conf.as[Configuration]
     } yield res
-
-    assert(configuration.isSuccess)
+    assert(configuration.isRight)
   }
 
   "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {
@@ -72,9 +69,7 @@ class TypesafeConfigSpec extends UnitSpec {
       """.stripMargin
 
     val tsConfig = ConfigFactory.parseString(cfgStr)
-
-    val result = Config.from(tsConfig).flatMap(_.as[Bar])
-
-    assert(result.isSuccess)
+    val result   = Config.from(tsConfig).flatMap(_.as[Bar])
+    assert(result.isRight)
   }
 }

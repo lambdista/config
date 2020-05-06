@@ -7,7 +7,6 @@ import java.nio.file.Path
 
 import scala.annotation.implicitNotFound
 import scala.io.Source
-import scala.util.Try
 
 /**
   * This type class represents a configuration loader.
@@ -22,21 +21,21 @@ trait ConfigLoader[R] {
     * Loads the configuration from `resource`.
     *
     * @param resource the resource representing the configuration
-    * @return a `Try[Config]`. If it's a `Failure` it means that either there has been a problem loading the resource
+    * @return a `Result[Config]`. If it's a `Failure` it means that either there has been a problem loading the resource
     *         or the configuration syntax is not correct.
     */
-  def load(resource: R): Try[Config]
+  def load(resource: R): Result[Config]
 }
 
 object ConfigLoader {
   def apply[R: ConfigLoader]: ConfigLoader[R] = implicitly[ConfigLoader[R]]
 
   implicit val stringLoader: ConfigLoader[String] = new ConfigLoader[String] {
-    override def load(resource: String): Try[Config] = ConfigParser.parse(resource)
+    override def load(resource: String): Result[Config] = ConfigParser.parse(resource)
   }
 
   implicit val sourceLoader: ConfigLoader[Source] = new ConfigLoader[Source] {
-    override def load(resource: Source): Try[Config] = {
+    override def load(resource: Source): Result[Config] = {
       val lines =
         try resource.mkString
         finally resource.close()
@@ -46,24 +45,27 @@ object ConfigLoader {
   }
 
   implicit val fileLoader: ConfigLoader[File] = new ConfigLoader[File] {
-    override def load(resource: File): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
+    override def load(resource: File): Result[Config] =
+      Result.attempt(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val pathLoader: ConfigLoader[Path] = new ConfigLoader[Path] {
-    override def load(resource: Path): Try[Config] =
-      Try(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
+    override def load(resource: Path): Result[Config] =
+      Result.attempt(Source.fromFile(resource.toFile)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val inputStreamLoader: ConfigLoader[InputStream] = new ConfigLoader[InputStream] {
-    override def load(resource: InputStream): Try[Config] =
-      Try(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
+    override def load(resource: InputStream): Result[Config] =
+      Result.attempt(Source.fromInputStream(resource)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val uriLoader: ConfigLoader[URI] = new ConfigLoader[URI] {
-    override def load(resource: URI): Try[Config] = Try(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
+    override def load(resource: URI): Result[Config] =
+      Result.attempt(Source.fromFile(resource)).flatMap(ConfigLoader[Source].load)
   }
 
   implicit val urlLoader: ConfigLoader[URL] = new ConfigLoader[URL] {
-    override def load(resource: URL): Try[Config] = Try(Source.fromURL(resource)).flatMap(ConfigLoader[Source].load)
+    override def load(resource: URL): Result[Config] =
+      Result.attempt(Source.fromURL(resource)).flatMap(ConfigLoader[Source].load)
   }
 }

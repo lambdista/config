@@ -2,9 +2,6 @@ package com.lambdista
 package config
 
 import scala.concurrent.duration.Duration
-import scala.util.Try
-
-import com.lambdista.util.syntax.std.option._
 
 /**
   * The abstract config value.
@@ -18,9 +15,9 @@ sealed trait AbstractValue {
     * Tries to convert this [[AbstractValue]] into an `A`, provided that there's an implicit
     * implementation of [[ConcreteValue]][A] in scope.
     *
-    * @return a `Try[A]`
+    * @return a `Result[A]`
     */
-  def as[A: ConcreteValue]: Try[A] = ConcreteValue[A].apply(this).toTry(new ConversionError(this))
+  def as[A: ConcreteValue]: Result[A] = ConcreteValue[A].apply(this).toRight(new ConversionError(this))
 
   /**
     * Description of this [[AbstractValue]].
@@ -71,7 +68,7 @@ final case class AbstractMap(value: Map[String, AbstractValue]) extends Abstract
     s"{$s}"
   }
 
-  def get(key: String): Try[AbstractValue] = value.get(key).toTry(new KeyNotFoundError(key))
+  def get(key: String): Result[AbstractValue] = value.get(key).toRight(new KeyNotFoundError(key))
 
   def transformKeys(f: PartialFunction[String, String]): AbstractMap =
     AbstractMap(value.map {

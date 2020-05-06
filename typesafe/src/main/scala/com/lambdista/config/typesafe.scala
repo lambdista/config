@@ -4,7 +4,7 @@ package config
 import java.lang.{Boolean => JBoolean}
 
 import scala.annotation.tailrec
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 import com.lambdista.util.sequence

@@ -168,7 +168,7 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
       else
         Left(new KeyNotFoundError(key))
 
-    abstractMap.get(key).orElse(recoverer)
+    Result.orElse(abstractMap.get(key), recoverer)
   }
 
   private def getValueFromMultipleStrings(keys: List[String]): Result[AbstractValue] = {

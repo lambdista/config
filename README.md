@@ -1,8 +1,9 @@
 [![Build Status](https://travis-ci.org/lambdista/config.svg?branch=master)](https://travis-ci.org/lambdista/config)
 [![codecov.io](http://codecov.io/github/lambdista/config/coverage.svg?branch=master)](http://codecov.io/github/lambdista/config?branch=master)
 [![Download](https://api.bintray.com/packages/lambdista/maven/config/images/download.svg)](https://bintray.com/lambdista/maven/config/_latestVersion)
-[![Javadocs](https://javadoc.io/badge/com.lambdista/config_2.12.svg)](https://javadoc.io/doc/com.lambdista/config_2.12)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.lambdista/config_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.lambdista/config_2.12)
+[![Javadocs](https://javadoc.io/badge/com.lambdista/config_2.13.svg)](https://javadoc.io/doc/com.lambdista/config_2.13)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.lambdista/config_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.lambdista/config_2.13)
+[![Latest version](https://index.scala-lang.org/lambdista/config/config/latest.svg?color=green&v=1)](https://index.scala-lang.org/lambdista/config/config)
 
 # config: a type safe, purely functional configuration library for Scala
 
@@ -104,9 +105,9 @@ val config: Result[Config] = Config.from(Paths.get(confPath))
 // config: Result[Config] = Right(
 //   Config(
 //     AbstractMap(
-//       Map(
+//       HashMap(
 //         "duration" -> AbstractDuration(5 seconds),
-//         "range" -> AbstractRange(Range.Inclusive(2, 4, 6, 8, 10)),
+//         "range" -> AbstractRange(Range(2, 4, 6, 8, 10)),
 //         "bar" -> AbstractString("hello"),
 //         "mapList" -> AbstractList(
 //           List(
@@ -498,7 +499,7 @@ implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
     case _                 => None
   }
 }
-// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@3299a3d9
+// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@797c84a5
 
 val foo: Result[Foo] = for {
   conf <- Config.from(confStr)
@@ -552,7 +553,7 @@ val config: Result[Config] = Config.from(confStr)
 //       Map(
 //         "age" -> AbstractNone,
 //         "charRange" -> AbstractRange(
-//           Range.Inclusive(
+//           Range(
 //             97,
 //             98,
 //             99,
@@ -685,7 +686,7 @@ val configTry: Result[Config] = Config.from(tsConfig)
 // configTry: Result[Config] = Right(
 //   Config(
 //     AbstractMap(
-//       Map(
+//       HashMap(
 //         "string" -> AbstractString("hello"),
 //         "double" -> AbstractNumber(1.414),
 //         "boolean" -> AbstractBool(true),

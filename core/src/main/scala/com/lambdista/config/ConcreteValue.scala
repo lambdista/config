@@ -87,17 +87,19 @@ object ConcreteValue {
 
   implicit val durationValue: ConcreteValue[Duration] =
     new ConcreteValue[Duration] {
-      def apply(abstractValue: AbstractValue): Option[Duration] = abstractValue match {
-        case AbstractDuration(d) => Some(d)
-        case _                   => None
-      }
+      def apply(abstractValue: AbstractValue): Option[Duration] =
+        abstractValue match {
+          case AbstractDuration(d) => Some(d)
+          case _                   => None
+        }
     }
 
   implicit val rangeValue: ConcreteValue[Range] = new ConcreteValue[Range] {
-    def apply(abstractValue: AbstractValue): Option[Range] = abstractValue match {
-      case AbstractRange(r) => Some(r)
-      case _                => None
-    }
+    def apply(abstractValue: AbstractValue): Option[Range] =
+      abstractValue match {
+        case AbstractRange(r) => Some(r)
+        case _                => None
+      }
   }
 
   implicit def optionValue[A](implicit A: ConcreteValue[A]): ConcreteValue[Option[A]] =
@@ -135,53 +137,57 @@ object ConcreteValue {
   implicit def mapValue[A](implicit A: ConcreteValue[A]): ConcreteValue[Map[String, A]] = {
     def traverseMap(m: Map[String, Option[A]]): Option[Map[String, A]] = {
       @tailrec
-      def go(xs: List[(String, Option[A])], acc: Map[String, A]): Option[Map[String, A]] = xs match {
-        case a :: as =>
-          a._2 match {
-            case Some(v) => go(as, acc + ((a._1, v)))
-            case None    => None
-          }
-        case Nil => Some(acc)
-      }
+      def go(xs: List[(String, Option[A])], acc: Map[String, A]): Option[Map[String, A]] =
+        xs match {
+          case a :: as =>
+            a._2 match {
+              case Some(v) => go(as, acc + ((a._1, v)))
+              case None    => None
+            }
+          case Nil => Some(acc)
+        }
 
       go(m.toList, Map.empty[String, A])
     }
 
     new ConcreteValue[Map[String, A]] {
-      def apply(v: AbstractValue): Option[Map[String, A]] = v.as[AbstractMap].toOption.flatMap { cm =>
-        traverseMap(cm.value.map { case (key, value) => key -> A.apply(value) })
-      }
+      def apply(v: AbstractValue): Option[Map[String, A]] =
+        v.as[AbstractMap].toOption.flatMap { cm =>
+          traverseMap(cm.value.map { case (key, value) => key -> A.apply(value) })
+        }
     }
   }
 
   type Typeclass[A] = ConcreteValue[A]
 
-  def combine[A](ctx: CaseClass[Typeclass, A]): ConcreteValue[A] = new ConcreteValue[A] {
-    override def apply(abstractValue: AbstractValue): Option[A] = {
-      def decodeMap(m: Map[String, AbstractValue]): Option[A] = {
-        val res: Either[List[Throwable], A] = ctx.constructEither { p =>
-          val v: AbstractValue = m.getOrElse(p.label, AbstractNone)
-          p.typeclass.apply(v).map(Right(_)).getOrElse(Left(new ConversionError(v)))
+  def combine[A](ctx: CaseClass[Typeclass, A]): ConcreteValue[A] =
+    new ConcreteValue[A] {
+      override def apply(abstractValue: AbstractValue): Option[A] = {
+        def decodeMap(m: Map[String, AbstractValue]): Option[A] = {
+          val res: Either[List[Throwable], A] = ctx.constructEither { p =>
+            val v: AbstractValue = m.getOrElse(p.label, AbstractNone)
+            p.typeclass.apply(v).map(Right(_)).getOrElse(Left(new ConversionError(v)))
+          }
+          res.toOption
         }
-        res.toOption
-      }
 
-      abstractValue match {
-        case AbstractMap(m) => decodeMap(m)
-        case _              => None
-      }
-    }
-  }
-
-  def dispatch[A](ctx: SealedTrait[Typeclass, A]): ConcreteValue[A] = new ConcreteValue[A] {
-    override def apply(abstractValue: AbstractValue): Option[A] = {
-      def applyToSub(s: Subtype[Typeclass, A]): Option[A] = s.typeclass.apply(abstractValue)
-
-      ctx.subtypes.collectFirst {
-        case x if applyToSub(x).isDefined => applyToSub(x).get
+        abstractValue match {
+          case AbstractMap(m) => decodeMap(m)
+          case _              => None
+        }
       }
     }
-  }
+
+  def dispatch[A](ctx: SealedTrait[Typeclass, A]): ConcreteValue[A] =
+    new ConcreteValue[A] {
+      override def apply(abstractValue: AbstractValue): Option[A] = {
+        def applyToSub(s: Subtype[Typeclass, A]): Option[A] = s.typeclass.apply(abstractValue)
+
+        ctx.subtypes.collectFirst {
+          case x if applyToSub(x).isDefined => applyToSub(x).get
+        }
+      }
+    }
 
   implicit def gen[A]: Typeclass[A] = macro Magnolia.gen[A]
 }

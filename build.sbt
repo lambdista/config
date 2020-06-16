@@ -8,7 +8,6 @@ lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
   scalaVersion := projectScalaVersion,
-  version := "0.7.0",
   crossScalaVersions := Seq(projectScalaVersion, "2.12.10"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions :=
@@ -52,7 +51,8 @@ lazy val commonSettings = Seq(
       |import scala.concurrent.duration._
       |import scala.concurrent.duration.Duration._
       |import com.lambdista.config._
-    """.stripMargin
+    """.stripMargin,
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val noPublishSettings = Seq(skip in publish := true)
@@ -93,3 +93,19 @@ lazy val docs = (project in file("config-docs"))
       "YEAR" -> LocalDate.now.getYear.toString
     )
   )
+
+inThisBuild(
+  List(
+    organization := "com.lambdidta",
+    homepage := Some(url("https://github.com/lambdista/config")),
+    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    developers := List(
+      Developer(
+        "lambdista",
+        "Alessandro Lacava",
+        "alessandrolacava@gmail.com",
+        url("https://alessandrolacava.com")
+      )
+    )
+  )
+)

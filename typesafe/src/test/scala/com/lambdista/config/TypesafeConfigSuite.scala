@@ -14,7 +14,7 @@ import com.lambdista.config.typesafe._
   * @author Alessandro Lacava
   * @since 2016-01-12
   */
-class TypesafeConfigSpec extends UnitSpec {
+class TypesafeConfigSuite extends UnitSuite {
   case class Person(firstName: String, lastName: String)
 
   case class TypesafeConfig(
@@ -26,7 +26,7 @@ class TypesafeConfigSpec extends UnitSpec {
     mapList: List[Person]
   )
 
-  "typesafe.conf using HOCON syntax used by the Typesafe config library" should "be loaded and converted correctly" in {
+  test("typesafe.conf using HOCON syntax used by the Typesafe config library should be loaded and converted correctly") {
     val confPath           = "typesafe/src/test/resources/typesafe.conf"
     val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
@@ -43,7 +43,7 @@ class TypesafeConfigSpec extends UnitSpec {
 
   case class Configuration(version: String, wss: List[Ws], home: String, db: Option[Db])
 
-  "typesafe2.conf using HOCON syntax used by the Typesafe config library" should "be loaded and converted correctly" in {
+  test("typesafe2.conf using HOCON syntax used by the Typesafe config library should be loaded and converted correctly") {
     val confPath           = "typesafe/src/test/resources/typesafe2.conf"
     val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
@@ -54,7 +54,7 @@ class TypesafeConfigSpec extends UnitSpec {
     assert(configuration.isRight)
   }
 
-  "Missing values in config" should "be converted into case classes where those values are of type Option[A]" in {
+  test("Missing values in config should be converted into case classes where those values are of type Option[A]") {
     case class Foo(a: Int, b: Option[String], c: String, d: Option[Double])
     case class Bar(foo: Foo, x: Option[Int], y: List[String], z: Option[List[Int]])
 

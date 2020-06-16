@@ -86,10 +86,11 @@ object ConfigParser {
         Duration(v, timeUnit)
       }
 
-      def buildInfinite(): Duration = unit match {
-        case "Inf"      => Duration.Inf
-        case "MinusInf" => Duration.MinusInf
-      }
+      def buildInfinite(): Duration =
+        unit match {
+          case "Inf"      => Duration.Inf
+          case "MinusInf" => Duration.MinusInf
+        }
 
       value.map(buildFinite).getOrElse(buildInfinite())
     }
@@ -103,10 +104,11 @@ object ConfigParser {
       "microseconds" | "microsecond" | "micros" | "µs" |
       "nanoseconds" | "nanosecond" | "nanos" | "nano" | "ns" |
       "Inf" | "MinusInf"
-  private def duration[_: P]: P[Duration] = P((number.! ~ spaces).? ~ validDuration.!).map {
-    case (value, unit) =>
-      DurationDecoder(value.map(_.toDouble), unit)
-  }
+  private def duration[_: P]: P[Duration] =
+    P((number.! ~ spaces).? ~ validDuration.!).map {
+      case (value, unit) =>
+        DurationDecoder(value.map(_.toDouble), unit)
+    }
   private def abstractDuration[_: P]: P[AbstractDuration] = duration.map(AbstractDuration)
 
   private def createRange(start: Int, method: String, end: Int, optStep: Option[Int]): Range = {

@@ -107,7 +107,9 @@ class ConfigSuite extends UnitSuite {
     assert(fooConfig.isRight)
   }
 
-  test("A config whose keys do not match exactly the case class field names should be transformable so that they match") {
+  test(
+    "A config whose keys do not match exactly the case class field names should be transformable so that they match"
+  ) {
     val confPath: String       = "core/src/test/resources/fooish.conf"
     val config: Result[Config] = Config.from(Paths.get(confPath))
 
@@ -209,7 +211,9 @@ class ConfigSuite extends UnitSuite {
     }
   }
 
-  test("Trying to convert to the wrong type an existing config element, retrieved dynamically, should produce an error") {
+  test(
+    "Trying to convert to the wrong type an existing config element, retrieved dynamically, should produce an error"
+  ) {
     val configStr: String =
       """
         |{
@@ -585,10 +589,11 @@ class ConfigSuite extends UnitSuite {
     """
     final case class Foo(uuid: UUID)
     implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
-      override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
-        case AbstractString(x) => Result.attempt(UUID.fromString(x)).toOption
-        case _                 => None
-      }
+      override def apply(abstractValue: AbstractValue): Option[UUID] =
+        abstractValue match {
+          case AbstractString(x) => Result.attempt(UUID.fromString(x)).toOption
+          case _                 => None
+        }
     }
     val foo: Result[Foo] = for {
       conf   <- Config.from(confStr)

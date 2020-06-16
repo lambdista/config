@@ -26,7 +26,9 @@ class TypesafeConfigSuite extends UnitSuite {
     mapList: List[Person]
   )
 
-  test("typesafe.conf using HOCON syntax used by the Typesafe config library should be loaded and converted correctly") {
+  test(
+    "typesafe.conf using HOCON syntax used by the Typesafe config library should be loaded and converted correctly"
+  ) {
     val confPath           = "typesafe/src/test/resources/typesafe.conf"
     val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
@@ -43,7 +45,9 @@ class TypesafeConfigSuite extends UnitSuite {
 
   case class Configuration(version: String, wss: List[Ws], home: String, db: Option[Db])
 
-  test("typesafe2.conf using HOCON syntax used by the Typesafe config library should be loaded and converted correctly") {
+  test(
+    "typesafe2.conf using HOCON syntax used by the Typesafe config library should be loaded and converted correctly"
+  ) {
     val confPath           = "typesafe/src/test/resources/typesafe2.conf"
     val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 

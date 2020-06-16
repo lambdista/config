@@ -93,19 +93,3 @@ lazy val docs = (project in file("config-docs"))
       "YEAR" -> LocalDate.now.getYear.toString
     )
   )
-
-inThisBuild(
-  List(
-    organization := "com.lambdidta",
-    homepage := Some(url("https://github.com/lambdista/config")),
-    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-    developers := List(
-      Developer(
-        "lambdista",
-        "Alessandro Lacava",
-        "alessandrolacava@gmail.com",
-        url("https://alessandrolacava.com")
-      )
-    )
-  )
-)

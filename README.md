@@ -54,7 +54,7 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 As a first step you need to add the resolver and dependency to your build file:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config" % "0.7.0"
+libraryDependencies += "com.lambdista" %% "config" % "0.7.1"
 ```
 
 Scala 2.13.x and 2.12.x are supported.
@@ -497,7 +497,7 @@ implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
     case _                 => None
   }
 }
-// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@192b54bb
+// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@2015ed33
 
 val foo: Result[Foo] = for {
   conf <- Config.from(confStr)
@@ -641,7 +641,7 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.7.0"
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.7.1"
 ```
 
 The example configuration is the following:

@@ -5,12 +5,25 @@ scala:
 jdk:
   - openjdk8
 
-script:
-  - sbt clean coverage test coverageReport
+before_install:
+  - git fetch --tags
 
-branches:
-  only:
-    - master
+stages:
+  - name: test
+  - name: release
+    if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
 
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
+jobs:
+  include:
+    - stage: test
+    - name: compile
+      script: sbt compile
+    - name: docs
+      script: sbt docs/mdoc
+    - name: test
+      script: sbt clean coverage test coverageReport
+    - name: codecov
+      script: bash <(curl -s https://codecov.io/bash)
+    # run ci-release only if previous stages passed
+    - stage: release
+      script: sbt ci-release

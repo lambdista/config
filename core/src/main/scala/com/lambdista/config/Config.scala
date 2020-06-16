@@ -69,12 +69,12 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     * `conf2`:
     * {{{
     * {
-  	*   foo = {
+    *   foo = {
     *     baz = 15,
-  	*     bar = "goodbye"
-  	*   },
-  	*   baz = 1,
-  	*   zoo = "hi"
+    *     bar = "goodbye"
+    *   },
+    *   baz = 1,
+    *   zoo = "hi"
     * }
     * }}}
     * `conf1.recursivelyMerge(conf2)`:
@@ -115,12 +115,12 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     * `conf2`:
     * {{{
     * {
-  	*   foo = {
+    *   foo = {
     *     baz = 15,
-  	*     bar = "goodbye"
-  	*   },
-  	*   baz = 1,
-  	*   zoo = "hi"
+    *     bar = "goodbye"
+    *   },
+    *   baz = 1,
+    *   zoo = "hi"
     * }
     * }}}
     * `conf1.merge(conf2)`:
@@ -128,7 +128,7 @@ final case class Config(abstractMap: AbstractMap) extends Dynamic {
     * {
     *   foo = {
     *     baz = 15,
-  	*     bar = "goodbye"
+    *     bar = "goodbye"
     *   },
     *   baz = 1,
     *   zoo = "hi"

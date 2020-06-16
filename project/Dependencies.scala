@@ -4,13 +4,13 @@ object Dependencies {
   lazy val projectScalaVersion = "2.13.2"
 
   // Versions
-  lazy val scalaTestVersion      = "3.1.1"
+  lazy val munitVersion          = "0.7.8"
   lazy val typesafeConfigVersion = "1.4.0"
-  lazy val fastparseVersion      = "2.1.3"
+  lazy val fastparseVersion      = "2.3.0"
   lazy val magnoliaVersion       = "0.16.0"
 
   // Libraries
-  lazy val scalatest      = "org.scalatest"  %% "scalatest"    % scalaTestVersion % "test"
+  lazy val munit          = "org.scalameta"  %% "munit"        % munitVersion % Test
   lazy val typesafeConfig = "com.typesafe"   % "config"        % typesafeConfigVersion
   lazy val fastparse      = "com.lihaoyi"    %% "fastparse"    % fastparseVersion
   lazy val magnolia       = "com.propensive" %% "magnolia"     % magnoliaVersion
@@ -18,11 +18,11 @@ object Dependencies {
 
   // Projects
   lazy val coreCommonDeps = Seq(
-    scalatest,
+    munit,
     scalaReflect,
     magnolia
   )
-  lazy val coreDeps     = coreCommonDeps :+ fastparse
+  lazy val coreDeps = coreCommonDeps :+ fastparse
 
-  lazy val typesafeDeps = Seq(typesafeConfig, scalatest)
+  lazy val typesafeDeps = Seq(typesafeConfig, munit)
 }

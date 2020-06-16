@@ -54,8 +54,6 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 As a first step you need to add the resolver and dependency to your build file:
 
 ```scala
-resolvers += "lambdista at bintray" at "https://dl.bintray.com/lambdista/maven"
-
 libraryDependencies += "com.lambdista" %% "config" % "0.7.0"
 ```
 

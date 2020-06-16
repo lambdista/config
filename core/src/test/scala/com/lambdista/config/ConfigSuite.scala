@@ -6,7 +6,6 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import scala.concurrent.duration._
-import scala.annotation.nowarn
 
 /**
   * Unit Test for Config.
@@ -585,7 +584,6 @@ class ConfigSuite extends UnitSuite {
       }
     """
     final case class Foo(uuid: UUID)
-    @nowarn
     implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
       override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
         case AbstractString(x) => Result.attempt(UUID.fromString(x)).toOption

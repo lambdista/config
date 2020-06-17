@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/lambdista/config.svg?branch=master)](https://travis-ci.org/lambdista/config)
 [![codecov.io](http://codecov.io/github/lambdista/config/coverage.svg?branch=master)](http://codecov.io/github/lambdista/config?branch=master)
-[![Download](https://api.bintray.com/packages/lambdista/maven/config/images/download.svg)](https://bintray.com/lambdista/maven/config/_latestVersion)
 [![Javadocs](https://javadoc.io/badge/com.lambdista/config_2.13.svg)](https://javadoc.io/doc/com.lambdista/config_2.13)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.lambdista/config_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.lambdista/config_2.13)
 [![Latest version](https://index.scala-lang.org/lambdista/config/config/latest.svg?color=green&v=1)](https://index.scala-lang.org/lambdista/config/config)
@@ -497,7 +496,7 @@ implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
     case _                 => None
   }
 }
-// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@2015ed33
+// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@2b02fe04
 
 val foo: Result[Foo] = for {
   conf <- Config.from(confStr)

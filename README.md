@@ -50,13 +50,13 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 
 <a name="usage"></a>
 ## Usage
-As a first step you need to add the resolver and dependency to your build file:
+As a first step you need to add the dependency to your build file:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config" % "0.7.1"
+libraryDependencies += "com.lambdista" %% "config" % "0.8.0"
 ```
 
-Scala 2.13.x and 2.12.x are supported.
+Only Scala 2.13.x versions are supported.
 
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 
@@ -100,31 +100,35 @@ val confPath = "core/src/test/resources/foo.conf"
 // confPath: String = "core/src/test/resources/foo.conf"
 val config: Result[Config] = Config.from(Paths.get(confPath))
 // config: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       HashMap(
-//         "duration" -> AbstractDuration(5 seconds),
-//         "range" -> AbstractRange(Range(2, 4, 6, 8, 10)),
-//         "bar" -> AbstractString("hello"),
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = HashMap(
+//         "duration" -> AbstractDuration(value = 5 seconds),
+//         "range" -> AbstractRange(value = Range(2, 4, 6, 8, 10)),
+//         "bar" -> AbstractString(value = "hello"),
 //         "mapList" -> AbstractList(
-//           List(
+//           values = List(
 //             AbstractMap(
-//               Map(
-//                 "alpha" -> AbstractString("hello"),
-//                 "beta" -> AbstractNumber(42.0)
+//               value = Map(
+//                 "alpha" -> AbstractString(value = "hello"),
+//                 "beta" -> AbstractNumber(value = 42.0)
 //               )
 //             ),
 //             AbstractMap(
-//               Map(
-//                 "alpha" -> AbstractString("world"),
-//                 "beta" -> AbstractNumber(24.0)
+//               value = Map(
+//                 "alpha" -> AbstractString(value = "world"),
+//                 "beta" -> AbstractNumber(value = 24.0)
 //               )
 //             )
 //           )
 //         ),
-//         "baz" -> AbstractNumber(42.0),
+//         "baz" -> AbstractNumber(value = 42.0),
 //         "list" -> AbstractList(
-//           List(AbstractNumber(1.0), AbstractNumber(2.0), AbstractNumber(3.0))
+//           values = List(
+//             AbstractNumber(value = 1.0),
+//             AbstractNumber(value = 2.0),
+//             AbstractNumber(value = 3.0)
+//           )
 //         )
 //       )
 //     )
@@ -170,7 +174,7 @@ val fooConfig: Result[FooConfig] = for {
   result <- conf.as[FooConfig]
 } yield result
 // fooConfig: Result[FooConfig] = Left(
-//   com.lambdista.config.ConversionError: Could not convert {duration = 5 seconds, range = [2.0, 4.0, 6.0, 8.0, 10.0], bar = "hello", mapList = [{alpha = "hello", beta = 42.0}, {alpha = "world", beta = 24.0}], baz = 42.0, list = [1.0, 2.0, 3.0]} to the type requested
+//   value = com.lambdista.config.ConversionError: Could not convert {duration = 5 seconds, range = [2.0, 4.0, 6.0, 8.0, 10.0], bar = "hello", mapList = [{alpha = "hello", beta = 42.0}, {alpha = "world", beta = 24.0}], baz = 42.0, list = [1.0, 2.0, 3.0]} to the type requested
 // )
 ```
 
@@ -227,13 +231,13 @@ val barFoo: Result[Foo] = for {
   cfg <- Config.from(barCfg)
   foo <- cfg.as[Foo]
 } yield foo
-// barFoo: Result[Foo] = Right(Bar(42, Some("hello")))
+// barFoo: Result[Foo] = Right(value = Bar(a = 42, b = Some(value = "hello")))
 
 val bazFoo: Result[Foo] = for {
   cfg <- Config.from(bazCfg)
   foo <- cfg.as[Foo]
 } yield foo
-// bazFoo: Result[Foo] = Right(Baz(1))
+// bazFoo: Result[Foo] = Right(value = Baz(z = 1))
 ```
 The value of `barFoo` will be:
 
@@ -271,12 +275,12 @@ val cfgStr = """
 
 val config: Result[Config] = Config.from(cfgStr)
 // config: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
-//         "foo" -> AbstractNumber(0.0),
-//         "bar" -> AbstractNumber(1.0),
-//         "baz" -> AbstractNumber(42.0)
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
+//         "foo" -> AbstractNumber(value = 0.0),
+//         "bar" -> AbstractNumber(value = 1.0),
+//         "baz" -> AbstractNumber(value = 42.0)
 //       )
 //     )
 //   )
@@ -287,7 +291,7 @@ val confAsMap: Result[Map[String, Int]] = for {
   result <- conf.as[Map[String, Int]]
 } yield result
 // confAsMap: Result[Map[String, Int]] = Right(
-//   Map("foo" -> 0, "bar" -> 1, "baz" -> 42)
+//   value = Map("foo" -> 0, "bar" -> 1, "baz" -> 42)
 // )
 ```
 
@@ -307,7 +311,7 @@ val bar: Result[String] = for {
   result <- conf.getAs[String]("bar")
 } yield result
 // bar: Result[String] = Left(
-//   com.lambdista.config.ConversionError: Could not convert 1.0 to the type requested
+//   value = com.lambdista.config.ConversionError: Could not convert 1.0 to the type requested
 // )
 ```
 
@@ -337,8 +341,12 @@ val cfgStr = """
 
 val config: Result[Config] = Config.from(cfgStr)
 // config: Result[Config] = Right(
-//   Config(
-//     AbstractMap(Map("foo" -> AbstractMap(Map("bar" -> AbstractNumber(42.0)))))
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
+//         "foo" -> AbstractMap(value = Map("bar" -> AbstractNumber(value = 42.0)))
+//       )
+//     )
 //   )
 // )
 
@@ -346,7 +354,7 @@ val bar: Result[Int] = for {
   c <- config
   bar <- c.getAs[Int]("foo.bar")
 } yield bar
-// bar: Result[Int] = Right(42)
+// bar: Result[Int] = Right(value = 42)
 ```
 
 Note how the `bar` value was retrieved using the dot syntax.
@@ -360,7 +368,7 @@ val greekList: Result[List[Greek]] = for {
   result <- conf.getAs[List[Greek]]("mapList")
 } yield result
 // greekList: Result[List[Greek]] = Left(
-//   com.lambdista.config.KeyNotFoundError: No such key: mapList
+//   value = com.lambdista.config.KeyNotFoundError: No such key: mapList
 // )
 ```
 
@@ -378,7 +386,7 @@ val greekVector: Result[Vector[Greek]] = for {
   result <- conf.getAs[Vector[Greek]]("mapList")
 } yield result
 // greekVector: Result[Vector[Greek]] = Left(
-//   com.lambdista.config.KeyNotFoundError: No such key: mapList
+//   value = com.lambdista.config.KeyNotFoundError: No such key: mapList
 // )
 ```
 
@@ -396,7 +404,7 @@ val greekSet: Result[Set[Greek]] = for {
   result <- conf.getAs[Set[Greek]]("mapList")
 } yield result
 // greekSet: Result[Set[Greek]] = Left(
-//   com.lambdista.config.KeyNotFoundError: No such key: mapList
+//   value = com.lambdista.config.KeyNotFoundError: No such key: mapList
 // )
 ```
 
@@ -414,7 +422,7 @@ val rangeAsList: Result[List[Int]] = for {
   result <- conf.getAs[List[Int]]("range")
 } yield result
 // rangeAsList: Result[List[Int]] = Left(
-//   com.lambdista.config.KeyNotFoundError: No such key: range
+//   value = com.lambdista.config.KeyNotFoundError: No such key: range
 // )
 
 val rangeAsVector: Result[Vector[Int]] = for {
@@ -422,7 +430,7 @@ val rangeAsVector: Result[Vector[Int]] = for {
   result <- conf.getAs[Vector[Int]]("range")
 } yield result
 // rangeAsVector: Result[Vector[Int]] = Left(
-//   com.lambdista.config.KeyNotFoundError: No such key: range
+//   value = com.lambdista.config.KeyNotFoundError: No such key: range
 // )
 
 val rangeAsSet: Result[Set[Int]] = for {
@@ -430,7 +438,7 @@ val rangeAsSet: Result[Set[Int]] = for {
   result <- conf.getAs[Set[Int]]("range")
 } yield result
 // rangeAsSet: Result[Set[Int]] = Left(
-//   com.lambdista.config.KeyNotFoundError: No such key: range
+//   value = com.lambdista.config.KeyNotFoundError: No such key: range
 // )
 ```
 
@@ -457,7 +465,7 @@ val alpha: Result[String] = for {
   result <- conf.map.alpha.as[String] // equivalent to: conf.getAs[String]("map.alpha")
 } yield result
 // alpha: Result[String] = Left(
-//   com.lambdista.config.KeyNotFoundError: No such key: map
+//   value = com.lambdista.config.KeyNotFoundError: No such key: map
 // )
 ```
 
@@ -496,13 +504,15 @@ implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
     case _                 => None
   }
 }
-// uuidCv: ConcreteValue[UUID] = repl.Session$App$$anon$11@2b02fe04
+// uuidCv: ConcreteValue[UUID] = repl.MdocSession$App$$anon$11@fbe6ef9
 
 val foo: Result[Foo] = for {
   conf <- Config.from(confStr)
   result <- conf.as[Foo]
 } yield result
-// foo: Result[Foo] = Right(Foo(238dfdf4-850d-4643-b4f3-019252515ed8))
+// foo: Result[Foo] = Right(
+//   value = Foo(uuid = 238dfdf4-850d-4643-b4f3-019252515ed8)
+// )
 ```
 
 The value of `foo` will be:
@@ -545,12 +555,12 @@ val confStr: String = "{age = null, charRange = 'a' to 'z'}"
     
 val config: Result[Config] = Config.from(confStr)
 // config: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
 //         "age" -> AbstractNone,
 //         "charRange" -> AbstractRange(
-//           Range(
+//           value = Range(
 //             97,
 //             98,
 //             99,
@@ -588,14 +598,14 @@ val age: Result[Option[Int]] = for {
   conf <- config
   result <- conf.getAs[Option[Int]]("age")
 } yield result
-// age: Result[Option[Int]] = Right(None)
+// age: Result[Option[Int]] = Right(value = None)
 
 val charRange: Result[List[Char]] = for {
   conf <- config
   result <- conf.getAs[List[Char]]("charRange")
 } yield result
 // charRange: Result[List[Char]] = Right(
-//   List(
+//   value = List(
 //     'a',
 //     'b',
 //     'c',
@@ -681,31 +691,35 @@ val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
 
 val configTry: Result[Config] = Config.from(tsConfig)
 // configTry: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       HashMap(
-//         "string" -> AbstractString("hello"),
-//         "double" -> AbstractNumber(1.414),
-//         "boolean" -> AbstractBool(true),
-//         "int" -> AbstractNumber(42.0),
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = HashMap(
+//         "string" -> AbstractString(value = "hello"),
+//         "double" -> AbstractNumber(value = 1.414),
+//         "boolean" -> AbstractBool(value = true),
+//         "int" -> AbstractNumber(value = 42.0),
 //         "mapList" -> AbstractList(
-//           List(
+//           values = List(
 //             AbstractMap(
-//               Map(
-//                 "firstName" -> AbstractString("John"),
-//                 "lastName" -> AbstractString("Doe")
+//               value = Map(
+//                 "firstName" -> AbstractString(value = "John"),
+//                 "lastName" -> AbstractString(value = "Doe")
 //               )
 //             ),
 //             AbstractMap(
-//               Map(
-//                 "lastName" -> AbstractString("Doe"),
-//                 "firstName" -> AbstractString("Jane")
+//               value = Map(
+//                 "lastName" -> AbstractString(value = "Doe"),
+//                 "firstName" -> AbstractString(value = "Jane")
 //               )
 //             )
 //           )
 //         ),
 //         "list" -> AbstractList(
-//           List(AbstractNumber(1.0), AbstractNumber(2.0), AbstractNumber(3.0))
+//           values = List(
+//             AbstractNumber(value = 1.0),
+//             AbstractNumber(value = 2.0),
+//             AbstractNumber(value = 3.0)
+//           )
 //         )
 //       )
 //     )
@@ -714,7 +728,7 @@ val configTry: Result[Config] = Config.from(tsConfig)
 
 val typesafeConfig: Result[TypesafeConfig] = config.flatMap(_.as[TypesafeConfig])
 // typesafeConfig: Result[TypesafeConfig] = Left(
-//   com.lambdista.config.ConversionError: Could not convert {age = None, charRange = [97.0, 98.0, 99.0, 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0, 109.0, 110.0, 111.0, 112.0, 113.0, 114.0, 115.0, 116.0, 117.0, 118.0, 119.0, 120.0, 121.0, 122.0]} to the type requested
+//   value = com.lambdista.config.ConversionError: Could not convert {age = None, charRange = [97.0, 98.0, 99.0, 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0, 109.0, 110.0, 111.0, 112.0, 113.0, 114.0, 115.0, 116.0, 117.0, 118.0, 119.0, 120.0, 121.0, 122.0]} to the type requested
 // )
 ```
 
@@ -775,13 +789,16 @@ val confStr2 = """
 
 val config1: Result[Config] = Config.from(confStr1)
 // config1: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
 //         "foo" -> AbstractMap(
-//           Map("alpha" -> AbstractNumber(1.0), "bar" -> AbstractString("hello"))
+//           value = Map(
+//             "alpha" -> AbstractNumber(value = 1.0),
+//             "bar" -> AbstractString(value = "hello")
+//           )
 //         ),
-//         "baz" -> AbstractNumber(42.0)
+//         "baz" -> AbstractNumber(value = 42.0)
 //       )
 //     )
 //   )
@@ -789,14 +806,17 @@ val config1: Result[Config] = Config.from(confStr1)
 
 val config2: Result[Config] = Config.from(confStr2)
 // config2: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
 //         "foo" -> AbstractMap(
-//           Map("baz" -> AbstractNumber(15.0), "bar" -> AbstractString("goodbye"))
+//           value = Map(
+//             "baz" -> AbstractNumber(value = 15.0),
+//             "bar" -> AbstractString(value = "goodbye")
+//           )
 //         ),
-//         "baz" -> AbstractNumber(1.0),
-//         "zoo" -> AbstractString("hi")
+//         "baz" -> AbstractNumber(value = 1.0),
+//         "zoo" -> AbstractString(value = "hi")
 //       )
 //     )
 //   )
@@ -807,18 +827,18 @@ val mergedConfig: Result[Config] = for {
   conf2 <- config2
 } yield conf1.recursivelyMerge(conf2)
 // mergedConfig: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
 //         "foo" -> AbstractMap(
-//           Map(
-//             "alpha" -> AbstractNumber(1.0),
-//             "bar" -> AbstractString("goodbye"),
-//             "baz" -> AbstractNumber(15.0)
+//           value = Map(
+//             "alpha" -> AbstractNumber(value = 1.0),
+//             "bar" -> AbstractString(value = "goodbye"),
+//             "baz" -> AbstractNumber(value = 15.0)
 //           )
 //         ),
-//         "baz" -> AbstractNumber(1.0),
-//         "zoo" -> AbstractString("hi")
+//         "baz" -> AbstractNumber(value = 1.0),
+//         "zoo" -> AbstractString(value = "hi")
 //       )
 //     )
 //   )
@@ -884,14 +904,17 @@ val confStr2 = """
 
 val config1: Result[Config] = Config.from(confStr1)
 // config1: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
 //         "foo" -> AbstractMap(
-//           Map("alpha" -> AbstractNumber(1.0), "bar" -> AbstractString("hello"))
+//           value = Map(
+//             "alpha" -> AbstractNumber(value = 1.0),
+//             "bar" -> AbstractString(value = "hello")
+//           )
 //         ),
-//         "zoo" -> AbstractString("hi"),
-//         "baz" -> AbstractNumber(42.0)
+//         "zoo" -> AbstractString(value = "hi"),
+//         "baz" -> AbstractNumber(value = 42.0)
 //       )
 //     )
 //   )
@@ -899,13 +922,16 @@ val config1: Result[Config] = Config.from(confStr1)
 
 val config2: Result[Config] = Config.from(confStr2)
 // config2: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
 //         "foo" -> AbstractMap(
-//           Map("baz" -> AbstractNumber(15.0), "bar" -> AbstractString("goodbye"))
+//           value = Map(
+//             "baz" -> AbstractNumber(value = 15.0),
+//             "bar" -> AbstractString(value = "goodbye")
+//           )
 //         ),
-//         "baz" -> AbstractNumber(1.0)
+//         "baz" -> AbstractNumber(value = 1.0)
 //       )
 //     )
 //   )
@@ -916,14 +942,17 @@ val mergedConfig: Result[Config] = for {
   conf2 <- config2
 } yield conf1.merge(conf2)
 // mergedConfig: Result[Config] = Right(
-//   Config(
-//     AbstractMap(
-//       Map(
+//   value = Config(
+//     abstractMap = AbstractMap(
+//       value = Map(
 //         "foo" -> AbstractMap(
-//           Map("baz" -> AbstractNumber(15.0), "bar" -> AbstractString("goodbye"))
+//           value = Map(
+//             "baz" -> AbstractNumber(value = 15.0),
+//             "bar" -> AbstractString(value = "goodbye")
+//           )
 //         ),
-//         "zoo" -> AbstractString("hi"),
-//         "baz" -> AbstractNumber(1.0)
+//         "zoo" -> AbstractString(value = "hi"),
+//         "baz" -> AbstractNumber(value = 1.0)
 //       )
 //     )
 //   )
@@ -954,7 +983,7 @@ For bugs, questions and discussions please use [Github Issues](https://github.co
 
 <a name="license"></a>
 ## License
-Copyright 2016-2020 Alessandro Lacava.
+Copyright 2016-2021 Alessandro Lacava.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at

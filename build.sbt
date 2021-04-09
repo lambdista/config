@@ -7,45 +7,34 @@ lazy val projectName = "config"
 lazy val commonSettings = Seq(
   moduleName := projectName,
   organization := "com.lambdista",
+  description := "A type safe, purely functional configuration library for Scala.",
+  homepage := Some(url("https://github.com/lambdista/config")),
+  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  developers := List(
+    Developer(
+      "lambdista",
+      "Alessandro Lacava",
+      "alessandrolacava@gmail.com",
+      url("https://alessandrolacava.com")
+    )
+  ),
   scalaVersion := projectScalaVersion,
-  crossScalaVersions := Seq(projectScalaVersion, "2.12.10"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  scalacOptions :=
-    (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) =>
-        Seq(
-          "-feature",
-          "-language:higherKinds",
-          "-language:implicitConversions",
-          "-language:postfixOps",
-          "-language:experimental.macros",
-          "-encoding",
-          "utf8",
-          "-deprecation",
-          "-unchecked",
-          "-Ywarn-unused",
-          "-Ywarn-dead-code"
-        )
-      case _ =>
-        Seq(
-          "-feature",
-          "-language:higherKinds",
-          "-language:implicitConversions",
-          "-language:postfixOps",
-          "-language:experimental.macros",
-          "-Ypartial-unification",
-          "-encoding",
-          "utf8",
-          "-deprecation",
-          "-unchecked",
-          "-Ywarn-unused-import",
-          "-Ywarn-unused",
-          "-Ywarn-dead-code",
-          "-Yno-adapted-args"
-        )
-    }),
+  scalacOptions := Seq(
+    "-feature",
+    "-language:higherKinds",
+    "-language:implicitConversions",
+    "-language:postfixOps",
+    "-language:experimental.macros",
+    "-encoding",
+    "utf8",
+    "-deprecation",
+    "-unchecked",
+    "-Ywarn-unused",
+    "-Ywarn-dead-code"
+  ),
   scalafmtOnCompile := true,
-  initialCommands in console :=
+  console / initialCommands :=
     """
       |import scala.util._
       |import scala.concurrent.duration._
@@ -55,7 +44,7 @@ lazy val commonSettings = Seq(
   testFrameworks += new TestFramework("munit.Framework")
 )
 
-lazy val noPublishSettings = Seq(skip in publish := true)
+lazy val noPublishSettings = Seq(publish / skip := true)
 
 lazy val config = (project in file("."))
   .aggregate(core, typesafe)
@@ -64,8 +53,8 @@ lazy val config = (project in file("."))
   .settings(noPublishSettings)
   .settings(
     moduleName := s"$projectName-root",
-    (unmanagedSourceDirectories in Compile) := Nil,
-    (unmanagedSourceDirectories in Test) := Nil
+    (Compile / unmanagedSourceDirectories) := Nil,
+    (Test / unmanagedSourceDirectories) := Nil
   )
 
 lazy val core = (project in file("core"))

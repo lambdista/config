@@ -12,6 +12,7 @@ logs/
 .classpath
 .project
 .settings/
+.bsp/
 
 # Intellij
 .idea/

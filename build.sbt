@@ -19,42 +19,20 @@ lazy val commonSettings = Seq(
     )
   ),
   scalaVersion := projectScalaVersion,
-  crossScalaVersions := Seq(projectScalaVersion, "2.12.10"),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  scalacOptions :=
-    (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) =>
-        Seq(
-          "-feature",
-          "-language:higherKinds",
-          "-language:implicitConversions",
-          "-language:postfixOps",
-          "-language:experimental.macros",
-          "-encoding",
-          "utf8",
-          "-deprecation",
-          "-unchecked",
-          "-Ywarn-unused",
-          "-Ywarn-dead-code"
-        )
-      case _ =>
-        Seq(
-          "-feature",
-          "-language:higherKinds",
-          "-language:implicitConversions",
-          "-language:postfixOps",
-          "-language:experimental.macros",
-          "-Ypartial-unification",
-          "-encoding",
-          "utf8",
-          "-deprecation",
-          "-unchecked",
-          "-Ywarn-unused-import",
-          "-Ywarn-unused",
-          "-Ywarn-dead-code",
-          "-Yno-adapted-args"
-        )
-    }),
+  scalacOptions := Seq(
+    "-feature",
+    "-language:higherKinds",
+    "-language:implicitConversions",
+    "-language:postfixOps",
+    "-language:experimental.macros",
+    "-encoding",
+    "utf8",
+    "-deprecation",
+    "-unchecked",
+    "-Ywarn-unused",
+    "-Ywarn-dead-code"
+  ),
   scalafmtOnCompile := true,
   console / initialCommands :=
     """

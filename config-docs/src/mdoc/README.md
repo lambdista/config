@@ -56,7 +56,7 @@ As a first step you need to add the dependency to your build file:
 libraryDependencies += "com.lambdista" %% "config" % "0.8.0"
 ```
 
-Only Scala 2.13.x is supported.
+Only Scala 2.13.x versions are supported.
 
 Ok, let's see the typical usage scenarios. As a use case consider the following configuration, unless otherwise specified:
 

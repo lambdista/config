@@ -1,11 +1,3 @@
-resolvers += Resolver.url(
-  "rtimush/sbt-plugin-snapshots",
-  new URL("https://dl.bintray.com/rtimush/sbt-plugin-snapshots/")
-)(Resolver.ivyStylePatterns)
-resolvers += "Typesafe repository" at "https://dl.bintray.com/typesafe/maven-releases/"
-
-classpathTypes += "maven-plugin"
-
 lazy val mdocVersion       = "2.2.19"
 lazy val scovVersion       = "1.6.1"
 lazy val ciReleaseVersion  = "1.5.7"

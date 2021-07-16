@@ -5,7 +5,7 @@ import scala.annotation.{implicitNotFound, tailrec}
 import scala.concurrent.duration.Duration
 
 import com.lambdista.util._
-import magnolia._
+import magnolia1._
 
 /**
   * Type class used to convert an [[AbstractValue]] into a concrete Scala value.

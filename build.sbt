@@ -18,6 +18,7 @@ lazy val commonSettings = Seq(
       url("https://alessandrolacava.com")
     )
   ),
+  version := "0.8.0",
   scalaVersion := projectScalaVersion,
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   scalacOptions := Seq(

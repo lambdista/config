@@ -76,4 +76,15 @@ class TypesafeConfigSuite extends UnitSuite {
     val result   = Config.from(tsConfig).flatMap(_.as[Bar])
     assert(result.isRight)
   }
+
+  test(
+    "issue_24.conf using HOCON syntax used by the Typesafe config library should be loaded correctly"
+  ) {
+    val confPath           = "typesafe/src/test/resources/issue_24.conf"
+    val tsConfig: TSConfig = ConfigFactory.parseFile(new File(confPath))
+
+    val config: Result[Config] = Config.from(tsConfig)
+
+    assert(config.isRight)
+  }
 }

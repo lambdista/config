@@ -53,7 +53,7 @@ is the type you expect because, of course, we don't fancy `null` in Scala code. 
 As a first step you need to add the dependency to your build file:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config" % "0.8.0"
+libraryDependencies += "com.lambdista" %% "config" % "0.8.1"
 ```
 
 Only Scala 2.13.x versions are supported.

@@ -92,9 +92,12 @@ Suppose the previous configuration is at the relative path: `core/src/test/resou
 First thing first, load and parse your config:
 
 ```scala
-import scala.concurrent.duration.Duration
-import java.nio.file.Paths
-import com.lambdista.config._
+import scala.concurrent.duration.Duration
+
+import java.nio.file.Paths
+
+import com.lambdista.config._
+
 
 val confPath = "core/src/test/resources/foo.conf"
 // confPath: String = "core/src/test/resources/foo.conf"
@@ -156,7 +159,8 @@ Once you have a `Config` object you can do two main things with it:
 Here's how you would map the previous configuration to a case class (`config` is the value from the previous example):
 
 ```scala
-case class Greek(alpha: String, beta: Int)
+case class Greek(alpha: String, beta: Int)
+
 
 case class FooConfig(
     bar: String, 
@@ -167,7 +171,8 @@ case class FooConfig(
     range: Range, 
     duration: Duration,
     missingValue: Option[String]
-)
+)
+
 
 val fooConfig: Result[FooConfig] = for {
   conf <- config
@@ -199,9 +204,12 @@ it would have worked smoothly.
 ### Automatic conversion to sealed trait
 Example:
 ```scala
-sealed trait Foo
-final case class Bar(a: Int, b: Option[String]) extends Foo
-final case class Baz(z: Int)                    extends Foo
+sealed trait Foo
+
+final case class Bar(a: Int, b: Option[String]) extends Foo
+
+final case class Baz(z: Int)                    extends Foo
+
 
 val barCfg: String = """
     {
@@ -485,7 +493,8 @@ you may want to decode a UUID as such instead of using the provided String concr
 for a better type safety.
 
 ```scala
-import java.util.UUID
+import java.util.UUID
+
 
 val confStr: String = """
   {
@@ -497,7 +506,8 @@ val confStr: String = """
 //     uuid = "238dfdf4-850d-4643-b4f3-019252515ed8"
 //   }
 // """
-final case class Foo(uuid: UUID)
+final case class Foo(uuid: UUID)
+
 implicit val uuidCv: ConcreteValue[UUID] = new ConcreteValue[UUID] {
   override def apply(abstractValue: AbstractValue): Option[UUID] = abstractValue match {
     case AbstractString(x) => Result.attempt(UUID.fromString(x)).toOption
@@ -650,7 +660,7 @@ Here's how simple is loading a configuration passing through Typesafe config lib
 the dependency for the Typesafe config adapter:
 
 ```scala
-libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.7.1"
+libraryDependencies += "com.lambdista" %% "config-typesafe" % "0.8.1"
 ```
 
 The example configuration is the following:
@@ -675,13 +685,18 @@ mapList = [
 Suppose it's in a file at the relative path `typesafe/src/test/resources/typesafe.conf`:
 
 ```scala
-import java.io.File
-import com.typesafe.config.{Config => TSConfig, ConfigFactory}
-import com.lambdista.config.typesafe._ // important to bring into scope the ConfigLoader for Typesafe's Config // important to bring into scope the ConfigLoader for Typesafe's Config
+import java.io.File
 
-case class Person(firstName: String, lastName: String)
+import com.typesafe.config.{Config => TSConfig, ConfigFactory}
 
-case class TypesafeConfig(string: String, int: Int, double: Double, boolean: Boolean, list: List[Int], mapList: List[Person])
+import com.lambdista.config.typesafe._ // important to bring into scope the ConfigLoader for Typesafe's Config
+ // important to bring into scope the ConfigLoader for Typesafe's Config
+
+case class Person(firstName: String, lastName: String)
+
+
+case class TypesafeConfig(string: String, int: Int, double: Double, boolean: Boolean, list: List[Int], mapList: List[Person])
+
 
 val confPath = "typesafe/src/test/resources/typesafe.conf"
 // confPath: String = "typesafe/src/test/resources/typesafe.conf"
